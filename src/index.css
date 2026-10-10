@@ -1,0 +1,1108 @@
+/* Font weights: only 400/500/700 are loaded (perf budget — was 6 weights
+   × 4 subsets ≈ 8+ font files). CSS font matching maps semibold(600) and
+   extrabold(800) to the nearest loaded face (700), so headings stay crisp
+   without extra downloads. @fontsource uses font-display: swap. */
+@import '@fontsource/estedad/400.css';
+@import '@fontsource/estedad/500.css';
+@import '@fontsource/estedad/700.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* ─── NEW: "Midnight Desert" design tokens ───
+     Warm terracotta sand + deep night + jade accents.
+     These vars are referenced by the legacy CSS classes below. */
+  --night: #1a1a30;
+  --night-light: #2a2a45;
+  --jade: #1db567;
+  --jade-light: #43cf85;
+  --sand: #b67456;
+  --sand-light: #c89372;
+  /* Legacy aliases (keep old class names working) */
+  --navy: var(--night);
+  --navy-light: var(--night-light);
+  --emerald: var(--jade);
+  --emerald-light: var(--jade-light);
+  --amber: var(--sand);
+  --amber-light: var(--sand-light);
+}
+
+* {
+  font-family: 'Estedad', 'Vazirmatn', 'IRANSans', system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  direction: rtl;
+  background-color: #faf6f0; /* sand-50 */
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition: background-color 0.35s ease, color 0.35s ease;
+}
+
+/* Dark mode base */
+.dark body,
+html.dark body {
+  background-color: #0a0a18; /* night-950 */
+  color: #e9d5c4; /* sand-200 */
+}
+.dark {
+  color-scheme: dark;
+}
+
+/* ─── Brand logo dark-mode adaptation ───
+   The BrandLogo SVG uses `var(--brand-bg)` and `var(--brand-text)` so it
+   adapts automatically. In light mode, the cream circle + navy text match
+   the parchment look. In dark mode, we flip to navy circle + cream text. */
+:root {
+  --brand-bg: #faf6f0;   /* cream */
+  --brand-text: #1a1a30; /* navy */
+}
+.dark {
+  --brand-bg: #1a1a30;   /* navy */
+  --brand-text: #e9d5c4; /* sand-200 */
+}
+
+/* Balanced headings — avoids lonely words on line breaks */
+h1, h2, h3, h4, h5, h6 {
+  text-wrap: balance;
+}
+
+/* ─── Global professional focus ring (keyboard a11y) ─── */
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 2px #f8fafc, 0 0 0 4px rgba(16, 185, 129, 0.75), 0 0 18px rgba(16, 185, 129, 0.35);
+  border-radius: 10px;
+  transition: box-shadow 0.15s ease;
+}
+
+/* ─── Cinematic film-grain overlay (applied once at app root) ─── */
+.noise-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  pointer-events: none;
+  opacity: 0.028;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+}
+
+/* ─── Respect reduced-motion preferences ─── */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #f5ebe0; /* sand-100 */
+}
+.dark ::-webkit-scrollbar-track {
+  background: #2a2a45; /* night-800 */
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #0f9152, #1db567); /* jade-600→500 */
+  border-radius: 4px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, #0c7344, #0f9152);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #0c7344, #0f9152);
+}
+
+/* ─── Glass morphism ─── */
+.glass {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.dark .glass {
+  background: rgba(15, 23, 42, 0.72);
+}
+.glass-dark {
+  background: rgba(15, 23, 42, 0.82);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+.glass-nav {
+  background: rgba(255, 255, 255, 0.82);
+  backdrop-filter: blur(18px) saturate(180%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%);
+}
+.dark .glass-nav {
+  background: rgba(8, 13, 26, 0.78);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
+.glass-card {
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.dark .glass-card {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* ─── Gradient text ─── */
+.gradient-text {
+  background: linear-gradient(135deg, #1db567, #0f9152, #43cf85);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 6s ease infinite;
+}
+.gradient-text-amber {
+  background: linear-gradient(135deg, #b67456, #9c5a3e, #c89372);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+/* New: warm sand→jade gradient for hero headings */
+.gradient-text-desert {
+  background: linear-gradient(135deg, #c89372, #1db567, #43cf85);
+  background-size: 200% 200%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: gradientShift 8s ease infinite;
+}
+
+/* ─── Mesh / aurora background ─── */
+.mesh-bg {
+  background-image:
+    radial-gradient(at 20% 20%, rgba(29, 181, 103, 0.15) 0%, transparent 50%),
+    radial-gradient(at 80% 80%, rgba(182, 116, 86, 0.15) 0%, transparent 50%),
+    radial-gradient(at 50% 50%, rgba(26, 26, 48, 0.03) 0%, transparent 50%);
+}
+.aurora-bg {
+  position: relative;
+}
+.aurora-bg::before {
+  content: '';
+  position: absolute;
+  inset: -50%;
+  background:
+    radial-gradient(circle at 30% 30%, rgba(5, 150, 105, 0.12) 0%, transparent 35%),
+    radial-gradient(circle at 70% 60%, rgba(217, 119, 6, 0.10) 0%, transparent 35%),
+    radial-gradient(circle at 50% 80%, rgba(52, 211, 153, 0.08) 0%, transparent 35%);
+  animation: aurora 16s ease-in-out infinite;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ─── Typing dots ─── */
+@keyframes typing-bounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40% { transform: translateY(-6px); opacity: 1; }
+}
+.typing-dot {
+  animation: typing-bounce 1.4s infinite ease-in-out;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* ─── Pulse glow ─── */
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(5, 150, 105, 0.3); }
+  50% { box-shadow: 0 0 40px rgba(5, 150, 105, 0.6); }
+}
+.pulse-glow {
+  animation: pulse-glow 2.5s infinite;
+}
+
+/* ─── Shimmer ─── */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  background-size: 200% 100%;
+  animation: shimmer 2.5s infinite;
+}
+
+/* ─── Glow utilities ─── */
+.glow-emerald { box-shadow: 0 0 50px -12px rgba(5, 150, 105, 0.35); }
+.glow-amber { box-shadow: 0 0 50px -12px rgba(217, 119, 6, 0.3); }
+.glow-cyan { box-shadow: 0 0 45px -8px rgba(6, 182, 212, 0.45); }
+.glow-neon { box-shadow: 0 0 35px 2px rgba(16, 185, 129, 0.35), inset 0 0 25px rgba(16, 185, 129, 0.15); }
+
+/* ─── Cyber Holographic Glass ─── */
+.cyber-glass {
+  background: radial-gradient(120% 120% at 50% 0%, rgba(15, 23, 42, 0.92) 0%, rgba(4, 7, 17, 0.98) 100%);
+  backdrop-filter: blur(24px) saturate(200%);
+  -webkit-backdrop-filter: blur(24px) saturate(200%);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.cyber-card {
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+.cyber-card:hover {
+  border-color: rgba(16, 185, 129, 0.4);
+  box-shadow: 0 10px 40px -10px rgba(5, 150, 105, 0.25);
+  transform: translateY(-2px);
+}
+
+/* ─── Scanner line animation ─── */
+@keyframes scanline {
+  0% { transform: translateY(-100%); opacity: 0; }
+  25% { opacity: 0.8; }
+  75% { opacity: 0.8; }
+  100% { transform: translateY(800%); opacity: 0; }
+}
+.scanline {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #10b981, #34d399, transparent);
+  box-shadow: 0 0 12px #10b981;
+  animation: scanline 4s linear infinite;
+  pointer-events: none;
+}
+
+/* ─── Soundwave Bars ─── */
+@keyframes soundwave {
+  0%, 100% { height: 4px; }
+  50% { height: 22px; }
+}
+.soundwave-bar {
+  animation: soundwave 1s ease-in-out infinite;
+}
+.soundwave-bar:nth-child(2) { animation-delay: 0.15s; }
+.soundwave-bar:nth-child(3) { animation-delay: 0.3s; }
+.soundwave-bar:nth-child(4) { animation-delay: 0.45s; }
+.soundwave-bar:nth-child(5) { animation-delay: 0.6s; }
+.soundwave-bar:nth-child(6) { animation-delay: 0.25s; }
+
+/* ─── Rotating Radar / Neural Ring ─── */
+@keyframes neural-rotate {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.neural-rotate {
+  animation: neural-rotate 20s linear infinite;
+}
+.neural-rotate-reverse {
+  animation: neural-rotate 28s linear infinite reverse;
+}
+
+/* ─── Card hover ─── */
+.card-hover {
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.card-hover:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 16px 50px -10px rgba(15, 23, 42, 0.18);
+}
+
+/* ─── Premium border glow on hover ─── */
+.border-glow {
+  position: relative;
+  overflow: hidden;
+}
+.border-glow::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(135deg, rgba(5,150,105,0.5), transparent, rgba(217,119,6,0.3));
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.border-glow:hover::after {
+  opacity: 1;
+}
+
+/* ─── Animated gradient border ─── */
+.gradient-border {
+  position: relative;
+  background: white;
+  border-radius: 1rem;
+}
+.gradient-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: linear-gradient(135deg, #059669, #10b981, #f59e0b, #d97706);
+  background-size: 300% 300%;
+  animation: gradientShift 4s ease infinite;
+  z-index: -1;
+}
+
+/* ─── Tooltip ─── */
+.legal-tooltip {
+  position: relative;
+  display: inline-block;
+}
+.legal-tooltip:hover .tooltip-content {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+.tooltip-content {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(8px);
+  background: #0f172a;
+  color: white;
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 11px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 50;
+  pointer-events: none;
+  margin-bottom: 6px;
+  max-width: 250px;
+  white-space: normal;
+  text-align: center;
+  width: max-content;
+}
+.tooltip-content::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: #0f172a;
+}
+
+/* ─── Keyframes referenced by tailwind config ─── */
+@keyframes gradientShift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+@keyframes aurora {
+  0%, 100% { transform: translate(0, 0) rotate(0deg); opacity: 0.5; }
+  33% { transform: translate(30px, -20px) rotate(120deg); opacity: 0.7; }
+  66% { transform: translate(-20px, 30px) rotate(240deg); opacity: 0.4; }
+}
+
+/* ─── Particle canvas ─── */
+.particle-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* ─── Scroll indicator ─── */
+@keyframes scrollHint {
+  0% { transform: translateY(0); opacity: 1; }
+  100% { transform: translateY(12px); opacity: 0; }
+}
+.scroll-hint-dot {
+  animation: scrollHint 1.5s ease-in-out infinite;
+}
+
+/* ─── Grid pattern overlay ─── */
+.grid-overlay {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
+  background-size: 40px 40px;
+}
+
+/* ─── Spotlight effect ─── */
+.spotlight {
+  position: relative;
+  overflow: hidden;
+}
+.spotlight::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(5,150,105,0.06) 0%, transparent 50%);
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+/* ─── Premium card sheen sweep (used with overflow-hidden parents) ─── */
+.sheen {
+  position: relative;
+  overflow: hidden;
+}
+.sheen::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: -80%;
+  width: 50%;
+  background: linear-gradient(105deg, transparent, rgba(255, 255, 255, 0.35), transparent);
+  transform: skewX(-18deg);
+  transition: right 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.sheen:hover::before {
+  right: 130%;
+}
+
+/* ─── Print styling for official legal documents ─── */
+@media print {
+  header, footer, nav, #hero, #calculator, #contract-generator, #claims, #experts, #about, button, .toast-container {
+    display: none !important;
+  }
+  body, html {
+    background: white !important;
+    color: black !important;
+  }
+  .fixed.z-50 {
+    position: static !important;
+    background: transparent !important;
+    padding: 0 !important;
+    display: block !important;
+  }
+  .fixed.z-50 > div {
+    max-width: 100% !important;
+    box-shadow: none !important;
+    border: none !important;
+    margin: 0 !important;
+  }
+}
+
+/* ─── New premium utilities (round 2: styling polish) ─── */
+
+/* Animated text shimmer — for marquee-like emphasis on key words */
+.text-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(15, 23, 42, 0.35) 0%,
+    rgba(15, 23, 42, 1) 25%,
+    rgba(5, 150, 105, 1) 50%,
+    rgba(15, 23, 42, 1) 75%,
+    rgba(15, 23, 42, 0.35) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: textShimmer 4s linear infinite;
+}
+
+/* Skeleton block — for any future async loading states */
+.skeleton {
+  background: linear-gradient(90deg, #e2e8f0 0%, #f1f5f9 50%, #e2e8f0 100%);
+  background-size: 200% 100%;
+  animation: skeleton 1.6s ease-in-out infinite;
+  border-radius: 0.5rem;
+}
+.dark .skeleton {
+  background: linear-gradient(90deg, #152540 0%, #1e3358 50%, #152540 100%);
+  background-size: 200% 100%;
+}
+
+/* Card lift — consistent premium hover for any card surface */
+.card-lift {
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.35s ease;
+  will-change: transform;
+}
+.card-lift:hover {
+  transform: translateY(-6px) rotate3d(1, 0, 0, 1.5deg);
+  box-shadow: 0 22px 55px -15px rgba(29, 181, 103, 0.30),
+              0 10px 25px -10px rgba(26, 26, 48, 0.18);
+}
+
+/* Rich gradient-mesh background — for section backdrops that need depth */
+.gradient-mesh-bg {
+  background-color: #faf6f0; /* sand-50 */
+  background-image:
+    radial-gradient(at 12% 18%, rgba(29, 181, 103, 0.10) 0px, transparent 50%),
+    radial-gradient(at 88% 12%, rgba(182, 116, 86, 0.10) 0px, transparent 50%),
+    radial-gradient(at 50% 92%, rgba(67, 207, 133, 0.08) 0px, transparent 50%),
+    radial-gradient(at 80% 80%, rgba(26, 26, 48, 0.06) 0px, transparent 50%);
+}
+.dark .gradient-mesh-bg {
+  background-color: #0a0a18; /* night-950 */
+  background-image:
+    radial-gradient(at 12% 18%, rgba(29, 181, 103, 0.16) 0px, transparent 50%),
+    radial-gradient(at 88% 12%, rgba(182, 116, 86, 0.12) 0px, transparent 50%),
+    radial-gradient(at 50% 92%, rgba(67, 207, 133, 0.10) 0px, transparent 50%),
+    radial-gradient(at 80% 80%, rgba(26, 26, 48, 0.40) 0px, transparent 50%);
+}
+
+/* ─── NEW: Persian geometric pattern overlay (girih-inspired) ───
+ * A subtle SVG-like pattern built from CSS gradients — evokes traditional
+ * Persian tilework without an external image. Used on hero & section backdrops.
+ */
+.girih-pattern {
+  background-color: transparent;
+  background-image:
+    /* diagonal lines */
+    repeating-linear-gradient(45deg, transparent 0, transparent 38px, rgba(182, 116, 86, 0.04) 38px, rgba(182, 116, 86, 0.04) 39px),
+    repeating-linear-gradient(-45deg, transparent 0, transparent 38px, rgba(29, 181, 103, 0.04) 38px, rgba(29, 181, 103, 0.04) 39px);
+}
+.dark .girih-pattern {
+  background-image:
+    repeating-linear-gradient(45deg, transparent 0, transparent 38px, rgba(200, 147, 114, 0.06) 38px, rgba(200, 147, 114, 0.06) 39px),
+    repeating-linear-gradient(-45deg, transparent 0, transparent 38px, rgba(67, 207, 133, 0.06) 38px, rgba(67, 207, 133, 0.06) 39px);
+}
+
+/* ─── NEW: warm sand glow blob for hero ─── */
+.warm-glow {
+  position: relative;
+}
+.warm-glow::after {
+  content: '';
+  position: absolute;
+  inset: -20%;
+  background: radial-gradient(circle at 30% 40%, rgba(182, 116, 86, 0.18) 0%, transparent 60%),
+              radial-gradient(circle at 70% 60%, rgba(29, 181, 103, 0.15) 0%, transparent 60%);
+  z-index: 0;
+  pointer-events: none;
+  filter: blur(40px);
+}
+
+/* Inline <mark> highlight — use sparingly for legal emphasis */
+mark, .legal-mark {
+  background: linear-gradient(180deg, transparent 55%, rgba(52, 211, 153, 0.35) 55%);
+  color: inherit;
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+/* Animated dotted/dashed track used in scroll progress & misc */
+@keyframes drift {
+  from { background-position: 0 0; }
+  to { background-position: 28px 28px; }
+}
+
+/* Section anchor offset so sticky-header nav doesn't cover headings */
+.scroll-mt-header {
+  scroll-margin-top: 96px;
+}
+
+/* Subtle keyboard hint chip (kbd) */
+kbd, .kbd {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(15, 23, 42, 0.08);
+  border: 1px solid rgba(15, 23, 42, 0.12);
+  border-bottom-width: 2px;
+  font-family: 'Vazirmatn', monospace;
+  font-size: 10px;
+  line-height: 1;
+  color: rgba(15, 23, 42, 0.7);
+}
+.kbd-dark {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Smooth caret-color animation for inputs in focus */
+input, textarea, select {
+  caret-color: #059669;
+}
+
+/* Tabular numbers for counters / stats so digits don't jitter */
+.tabular-nums {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+/* ─── Font-size user preference (useFontSize hook) ───
+ * The hook sets --user-font-scale on <html>. We apply it to the <html>
+ * element's own font-size so ALL rem-based units (Tailwind text-* classes,
+ * spacing, etc.) scale together. This is the correct WCAG 1.4.4 approach.
+ */
+:root {
+  --user-font-scale: 1;
+}
+html {
+  font-size: calc(100% * var(--user-font-scale));
+}
+
+/* Dark-mode aware kbd chip — used in KeyboardShortcutsHelp modal */
+.dark .kbd:not(.kbd-dark) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  color: rgba(255, 255, 255, 0.85);
+}
+
+/* Respect prefers-reduced-motion for the cookie banner entrance */
+@media (prefers-reduced-motion: reduce) {
+  .cookie-banner-anim {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+
+
+/* ═══════════════════════════════════════════════════════════════
+ * ADVANCED ANIMATION SYSTEM — Round: "Professional Polish"
+ * GPU-accelerated, performant, accessible (prefers-reduced-motion)
+ * ═══════════════════════════════════════════════════════════════ */
+
+/* ─── 1. Stagger reveal on scroll (CSS-only, no JS overhead) ─── */
+@keyframes stagger-up {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 24px, 0);
+    filter: blur(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+    filter: blur(0);
+  }
+}
+
+.reveal-stagger {
+  animation: stagger-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ─── 2. Magnetic hover effect (subtle scale toward cursor) ─── */
+.magnetic {
+  transition: transform 0.2s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+
+/* ─── 3. 3D tilt on cards (GPU-accelerated) ─── */
+.tilt-card {
+  transform-style: preserve-3d;
+  perspective: 1000px;
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: transform;
+}
+.tilt-card:hover {
+  transform: perspective(1000px) rotateX(2deg) rotateY(-2deg) translateY(-4px);
+}
+
+/* ─── 4. Glow border animation (animated gradient ring) ─── */
+@keyframes glow-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+.glow-border {
+  position: relative;
+  isolation: isolate;
+}
+.glow-border::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  border-radius: inherit;
+  background: conic-gradient(from 0deg, transparent 0%, var(--jade) 33%, transparent 66%, var(--sand) 100%);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  z-index: -1;
+  animation: glow-rotate 4s linear infinite;
+}
+.glow-border:hover::before {
+  opacity: 0.6;
+}
+
+/* ─── 5. Shimmer text (gold sweep on key headings) ─── */
+@keyframes text-shimmer-sweep {
+  0% { background-position: 200% center; }
+  100% { background-position: -200% center; }
+}
+.shimmer-text {
+  background: linear-gradient(
+    90deg,
+    var(--night) 0%,
+    var(--jade) 25%,
+    var(--sand-light) 50%,
+    var(--jade) 75%,
+    var(--night) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: text-shimmer-sweep 5s linear infinite;
+}
+
+/* ─── 6. Aurora animated background (more sophisticated) ─── */
+@keyframes aurora-flow {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.5;
+  }
+  25% {
+    transform: translate(30px, -20px) scale(1.1);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translate(-20px, 30px) scale(0.9);
+    opacity: 0.4;
+  }
+  75% {
+    transform: translate(20px, 20px) scale(1.05);
+    opacity: 0.6;
+  }
+}
+.aurora-anim {
+  animation: aurora-flow 20s ease-in-out infinite;
+}
+.aurora-anim-2 {
+  animation: aurora-flow 25s ease-in-out infinite reverse;
+}
+.aurora-anim-3 {
+  animation: aurora-flow 18s ease-in-out infinite;
+  animation-delay: -5s;
+}
+
+/* ─── 7. Pulsing dot (status indicators) ─── */
+@keyframes pulse-dot {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.3);
+    opacity: 0.7;
+  }
+}
+.pulse-dot {
+  animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* ─── 8. Floating animation (gentle, for badges/icons) ─── */
+@keyframes gentle-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-8px); }
+}
+.gentle-float {
+  animation: gentle-float 3s ease-in-out infinite;
+}
+
+/* ─── 9. Number counter slide-in ─── */
+@keyframes count-slide {
+  from {
+    opacity: 0;
+    transform: translate3d(20px, 0, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+.count-slide {
+  animation: count-slide 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* ─── 10. Ripple effect on click ─── */
+@keyframes ripple-expand {
+  from {
+    transform: scale(0);
+    opacity: 0.6;
+  }
+  to {
+    transform: scale(4);
+    opacity: 0;
+  }
+}
+.ripple {
+  position: relative;
+  overflow: hidden;
+}
+.ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.4);
+  transform: scale(0);
+  opacity: 0;
+  pointer-events: none;
+}
+.ripple:active::after {
+  animation: ripple-expand 0.6s ease-out;
+}
+
+/* ─── 11. Glass morphism v2 (with noise + inner shadow) ─── */
+.glass-v2 {
+  background: rgba(250, 246, 240, 0.65);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border: 1px solid rgba(182, 116, 86, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3),
+              0 8px 32px rgba(26, 26, 48, 0.08);
+}
+.dark .glass-v2 {
+  background: rgba(10, 10, 24, 0.65);
+  border: 1px solid rgba(67, 207, 133, 0.15);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05),
+              0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* ─── 12. Gradient border (sophisticated, 2-stop) ─── */
+.gradient-border-v2 {
+  position: relative;
+  background: inherit;
+  border-radius: inherit;
+}
+.gradient-border-v2::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.5px;
+  background: linear-gradient(135deg, var(--jade), var(--sand), transparent);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+}
+.gradient-border-v2:hover::before {
+  opacity: 1;
+}
+
+/* ─── 13. Advanced scrollbar (thin, themed) ─── */
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: var(--jade) transparent;
+}
+.scrollbar-thin::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--jade), var(--jade-light));
+  border-radius: 4px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ─── 14. Section entrance (dramatic) ─── */
+@keyframes section-enter {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 40px, 0) scale(0.98);
+    filter: blur(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    filter: blur(0);
+  }
+}
+.section-enter {
+  animation: section-enter 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* ─── 15. Letter-by-letter heading reveal ─── */
+@keyframes letter-reveal {
+  from {
+    opacity: 0;
+    transform: translateY(0.3em);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ─── 16. Optimized will-change utilities ─── */
+.gpu {
+  will-change: transform, opacity;
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* ─── 17. Cursor glow (follows mouse, subtle) ─── */
+.cursor-glow {
+  position: fixed;
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(29, 181, 103, 0.08) 0%, transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+  transition: transform 0.1s ease-out;
+  will-change: transform;
+}
+
+/* ─── 18. Text gradient animation (jade→sand cycling) ─── */
+@keyframes gradient-cycle {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.gradient-cycle {
+  background-size: 200% 200%;
+  animation: gradient-cycle 8s ease infinite;
+}
+
+/* ─── 19. Card hover lift with shadow expansion ─── */
+.card-hover-v2 {
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              box-shadow 0.4s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.4s ease;
+  will-change: transform;
+  transform: translateZ(0);
+}
+.card-hover-v2:hover {
+  transform: translateY(-8px) translateZ(0);
+  box-shadow: 0 25px 60px -15px rgba(29, 181, 103, 0.2),
+              0 12px 30px -10px rgba(26, 26, 48, 0.15);
+}
+
+/* ─── 20. Button press (tactile feedback) ─── */
+.btn-press {
+  transition: transform 0.1s ease;
+}
+.btn-press:active {
+  transform: scale(0.96);
+}
+
+/* ─── 21. Loading shimmer (skeleton v2) ─── */
+@keyframes shimmer-sweep {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton-v2 {
+  background: linear-gradient(
+    90deg,
+    rgba(250, 246, 240, 0.4) 0%,
+    rgba(200, 147, 114, 0.2) 50%,
+    rgba(250, 246, 240, 0.4) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer-sweep 1.8s ease-in-out infinite;
+}
+.dark .skeleton-v2 {
+  background: linear-gradient(
+    90deg,
+    rgba(26, 26, 48, 0.4) 0%,
+    rgba(67, 207, 133, 0.15) 50%,
+    rgba(26, 26, 48, 0.4) 100%
+  );
+  background-size: 200% 100%;
+}
+
+/* ─── 22. Conic gradient spinner (premium loading) ─── */
+@keyframes conic-spin {
+  to { transform: rotate(360deg); }
+}
+.conic-spinner {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0%, var(--jade) 80%, var(--jade-light) 100%);
+  -webkit-mask: radial-gradient(circle, transparent 40%, black 41%);
+  mask: radial-gradient(circle, transparent 40%, black 41%);
+  animation: conic-spin 0.8s linear infinite;
+}
+
+/* ─── 23. Ambient grain (cinematic, overlay) ─── */
+.ambient-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  opacity: 0.02;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  mix-blend-mode: overlay;
+}
+
+/* ─── 24. Drop shadow text (premium heading depth) ─── */
+.text-shadow-premium {
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.15),
+               0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* ─── 25. Focus ring v2 (more visible, animated) ─── */
+@keyframes focus-pulse {
+  0%, 100% { box-shadow: 0 0 0 2px rgba(250, 246, 240, 1), 0 0 0 4px rgba(29, 181, 103, 0.6); }
+  50% { box-shadow: 0 0 0 2px rgba(250, 246, 240, 1), 0 0 0 5px rgba(29, 181, 103, 0.8); }
+}
+.focus-pulse:focus-visible {
+  animation: focus-pulse 1.5s ease-in-out infinite;
+  border-radius: 10px;
+  outline: none;
+}
+
+/* ─── 26. Responsive: disable heavy animations on mobile ─── */
+@media (max-width: 768px) {
+  .aurora-anim,
+  .aurora-anim-2,
+  .aurora-anim-3 {
+    animation: none;
+  }
+  .glow-border::before {
+    display: none;
+  }
+  .cursor-glow {
+    display: none;
+  }
+}
+
+/* ─── 27. Reduced motion: respect user preference ─── */
+@media (prefers-reduced-motion: reduce) {
+  .reveal-stagger,
+  .aurora-anim,
+  .aurora-anim-2,
+  .aurora-anim-3,
+  .pulse-dot,
+  .gentle-float,
+  .shimmer-text,
+  .gradient-cycle,
+  .section-enter,
+  .count-slide,
+  .skeleton-v2,
+  .conic-spinner,
+  .ambient-grain {
+    animation: none !important;
+    transition: none !important;
+  }
+  .tilt-card:hover {
+    transform: none;
+  }
+}

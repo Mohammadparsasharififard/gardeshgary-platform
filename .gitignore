@@ -1,0 +1,38 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+dist-ssr/
+
+# Environment files (keep .env.example tracked, ignore the rest)
+.env
+.env.local
+.env.*.local
+
+# Editor / OS
+*.lnk
+.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Media (already excluded by original .gitignore — keep as-is)
+*.jpg
+*.pdf
+
+# Misc
+.cache/
+.temp/
+*.tsbuildinfo

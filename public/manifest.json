@@ -1,0 +1,48 @@
+{
+  "name": "پلتفرم ملی حقوق گردشگری ایران",
+  "short_name": "حقوق گردشگری",
+  "description": "مرجع تخصصی حقوقی گردشگری ایران — قوانین، دانشنامه، محاسبه‌گر خسارت و تنظیم قرارداد تور",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#080d1a",
+  "theme_color": "#059669",
+  "scope": "./",
+  "categories": ["legal", "travel", "productivity"],
+  "icons": [
+    {
+      "src": "./favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./og-image.png",
+      "sizes": "1200x630",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "جستجوی هوشمند",
+      "short_name": "جستجو",
+      "url": "./?action=search",
+      "description": "باز کردن جستجوی هوشمند قوانین"
+    },
+    {
+      "name": "بانک قوانین",
+      "short_name": "قوانین",
+      "url": "./#/laws",
+      "description": "بانک هوشمند قوانین گردشگری"
+    },
+    {
+      "name": "دستیار هوشمند",
+      "short_name": "AI",
+      "url": "./#/ai-assistant",
+      "description": "دستیار هوشمند حقوق گردشگری"
+    }
+  ]
+}

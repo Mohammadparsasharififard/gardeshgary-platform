@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { width: 1200px; height: 630px; overflow: hidden; }
+  @font-face {
+    font-family: 'Vazirmatn';
+    src: url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-Bold.woff2') format('woff2');
+    font-weight: 700;
+  }
+  @font-face {
+    font-family: 'Vazirmatn';
+    src: url('https://cdn.jsdelivr.net/gh/rastikerdar/vazirmatn@v33.003/fonts/webfonts/Vazirmatn-ExtraBold.woff2') format('woff2');
+    font-weight: 800;
+  }
+  .stage {
+    width: 1200px; height: 630px;
+    position: relative;
+    background:
+      radial-gradient(circle at 15% 20%, rgba(16,185,129,0.28) 0%, transparent 42%),
+      radial-gradient(circle at 85% 85%, rgba(217,119,6,0.20) 0%, transparent 40%),
+      radial-gradient(circle at 70% 15%, rgba(52,211,153,0.12) 0%, transparent 35%),
+      linear-gradient(135deg, #080d1a 0%, #0f172a 55%, #152540 100%);
+    font-family: 'Vazirmatn', sans-serif;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .grid-overlay {
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(rgba(255,255,255,0.045) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,0.045) 1px, transparent 1px);
+    background-size: 48px 48px;
+  }
+  .glow-ring {
+    position: absolute;
+    border-radius: 9999px;
+    border: 1.5px solid rgba(16,185,129,0.22);
+  }
+  .badge {
+    display: inline-flex; align-items: center; gap: 10px;
+    background: rgba(16,185,129,0.12);
+    border: 1px solid rgba(52,211,153,0.45);
+    color: #6ee7b7;
+    font-size: 22px; font-weight: 700;
+    padding: 10px 26px; border-radius: 9999px;
+    letter-spacing: 0.5px;
+  }
+  .badge .dot { width: 10px; height: 10px; border-radius: 9999px; background: #34d399; box-shadow: 0 0 14px #34d399; }
+  h1 {
+    color: #ffffff;
+    font-size: 78px; font-weight: 800;
+    line-height: 1.25;
+    margin: 26px 0 10px;
+    text-shadow: 0 8px 40px rgba(0,0,0,0.5);
+  }
+  h1 .grad {
+    background: linear-gradient(120deg, #34d399, #10b981 55%, #fbbf24);
+    -webkit-background-clip: text; background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .sub {
+    color: #94a3b8;
+    font-size: 27px; font-weight: 700;
+    line-height: 1.8;
+  }
+  .chips { display: flex; gap: 14px; margin-top: 38px; }
+  .chip {
+    color: #cbd5e1; font-size: 20px; font-weight: 700;
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.14);
+    padding: 10px 22px; border-radius: 14px;
+    backdrop-filter: blur(6px);
+  }
+  .logo-row {
+    position: absolute; top: 44px; left: 56px;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .logo-mark {
+    width: 64px; height: 64px; border-radius: 18px;
+    background: linear-gradient(135deg, #059669, #10b981 60%, #0d9488);
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 0 34px rgba(16,185,129,0.55), inset 0 2px 6px rgba(255,255,255,0.25);
+    transform: rotate(-4deg);
+  }
+  .logo-mark svg { width: 36px; height: 36px; }
+  .brand { color: #fff; font-size: 24px; font-weight: 800; }
+  .brand small { display: block; color: #6ee7b7; font-size: 15px; font-weight: 700; margin-top: 2px; }
+  .bottom-line {
+    position: absolute; bottom: 40px; left: 56px;
+    color: #64748b; font-size: 17px; font-weight: 700;
+    display: flex; align-items: center; gap: 10px;
+  }
+  .bottom-line .dot { width: 8px; height: 8px; border-radius: 99px; background: #fbbf24; }
+</style>
+</head>
+<body>
+  <div class="stage">
+    <div class="grid-overlay"></div>
+    <div class="glow-ring" style="width:560px;height:560px;top:-180px;right:-140px;"></div>
+    <div class="glow-ring" style="width:380px;height:380px;bottom:-140px;left:-100px;border-color:rgba(251,191,36,0.18);"></div>
+
+    <div class="logo-row">
+      <div class="logo-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/></svg>
+      </div>
+      <div class="brand">پلتفرم ملی حقوق گردشگری<small>مرجع تخصصی حقوقی گردشگری ایران</small></div>
+    </div>
+
+    <div style="text-align:center; position:relative; z-index:2; padding: 0 90px;">
+      <span class="badge"><span class="dot"></span> قوانین + هوش مصنوعی حقوقی</span>
+      <h1>مرجع تخصصی<br/><span class="grad">حقوق گردشگری ایران</span></h1>
+      <p class="sub">قوانین و آیین‌نامه‌ها، دانشنامه حقوقی، محاسبه‌گر خسارت<br/>و تنظیم قرارداد تور — همه در یک پلتفرم</p>
+      <div class="chips" style="justify-content:center;">
+        <span class="chip">⚖️ بانک ۵۰۰+ ماده قانونی</span>
+        <span class="chip">✈️ حقوق مسافر هوایی</span>
+        <span class="chip">🏨 جرایم کنسلی هتل</span>
+      </div>
+    </div>
+
+    <div class="bottom-line"><span class="dot"></span> tourismlaw.ir — نسخه ۰.۱</div>
+  </div>
+</body>
+</html>
