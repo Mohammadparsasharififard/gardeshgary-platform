@@ -52,9 +52,13 @@ export async function api<T = unknown>(
     data = await res.json();
   }
   if (!res.ok) {
-    const message =
-      (data && typeof data === 'object' && 'error' in data && String((data as { error: unknown }).error)) ||
-      `خطای سرور (${res.status})`;
+    // The backend's JSON error body ({ error: "..." }) wins; anything else
+    // (empty body, non-JSON, or an empty error string) falls back to a
+    // generic Persian status message.
+    let message = `خطای سرور (${res.status})`;
+    if (data && typeof data === 'object' && 'error' in data) {
+      message = String((data as { error: unknown }).error) || message;
+    }
     throw new ApiError(message, res.status, data);
   }
   return data as T;
@@ -285,7 +289,9 @@ export interface AuthUser {
   name: string;
   email?: string;
   mobile?: string;
-  role: 'ADMIN' | 'LAWYER' | 'USER';
+  // Backend Prisma Role enum — SUPERADMIN is returned for the initial admin
+  // account (admin-password login / 2FA verify).
+  role: 'SUPERADMIN' | 'ADMIN' | 'LAWYER' | 'USER';
   roleLabel: string;
   provider: 'OTP' | 'SSO' | 'ADMIN_PASSWORD';
 }

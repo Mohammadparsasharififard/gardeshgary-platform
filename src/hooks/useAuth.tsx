@@ -1,4 +1,4 @@
-import { createContext, useCallback, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 import {
   apiClient,
   setToken,
@@ -9,25 +9,21 @@ import {
   type LoginResponse,
 } from '@/lib/api';
 
-export type UserRole = 'ADMIN' | 'LAWYER' | 'USER';
-export type AuthProvider = 'OTP' | 'SSO' | 'ADMIN_PASSWORD';
+// Roles are the backend's UPPERCASE values (Prisma Role enum), kept
+// end-to-end with NO client-side translation: the old lowercase mapping
+// never matched any comparison in the app.
+export type UserRole = AuthUser['role'];
+export type AuthProvider = AuthUser['provider'];
 
-export interface AuthUser {
-  id: string;
-  name: string;
-  email?: string;
-  mobile?: string;
-  nationalCode?: string;
-  role: UserRole;
-  provider: AuthProvider;
-  roleLabel: string;
-  loggedInAt: number;
-}
-
-// Legacy compatibility: export the shape the rest of the app expects.
-// The new API uses uppercase roles (ADMIN/LAWYER/USER) but the original
-// components expect lowercase ('admin'/'user'). We translate here so the UI
-// doesn't break.
+// Persian display labels per backend role (mirrors ROLE_LABELS in the
+// backend's src/lib/auth.ts) — used only as a fallback when the API payload
+// doesn't carry a roleLabel.
+const ROLE_LABELS: Record<UserRole, string> = {
+  SUPERADMIN: 'مدیر ارشد سیستم',
+  ADMIN: 'مدیر سیستم',
+  LAWYER: 'متخصص حقوقی',
+  USER: 'کاربر',
+};
 
 // Storage key for the legacy persisted user object (kept for backward compat)
 const STORAGE_KEY = 'gardeshgary.auth.user.v1';
@@ -46,7 +42,7 @@ interface AuthContextValue {
   verifyOtp: (mobile: string, code: string, name?: string) => Promise<AuthUser>;
   // Legacy login (kept for backward compat — no longer used by UI but
   // harmless to leave exported for now)
-  login: (role: UserRole, name: string, provider: AuthProvider, extra?: { mobile?: string; nationalCode?: string }) => AuthUser;
+  login: (role: UserRole, name: string, provider: AuthProvider, extra?: { mobile?: string }) => AuthUser;
   logout: () => Promise<void>;
   hasRole: (role: UserRole) => boolean;
   hasAnyRole: (roles: UserRole[]) => boolean;
@@ -55,25 +51,19 @@ interface AuthContextValue {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-// Normalize the backend user (uppercase roles) to the legacy UI shape
-// (lowercase roles + provider string).
+// Keep the backend user exactly as the API returns it (UPPERCASE roles,
+// no translation). The API intentionally omits nationalCode (PII) and has
+// no loggedInAt — neither is set client-side. Only display fallbacks are
+// filled in (some auth endpoints omit roleLabel/provider).
 function normalizeUser(u: AuthUser): AuthUser {
-  const roleLower = (l: string) => l.toLowerCase() as UserRole;
-  const roleLabelMap: Record<string, string> = {
-    ADMIN: 'مدیر سیستم',
-    LAWYER: 'متخصص حقوقی',
-    USER: 'کاربر',
-  };
   return {
     id: u.id,
     name: u.name,
     email: u.email,
     mobile: u.mobile,
-    nationalCode: (u as { nationalCode?: string }).nationalCode,
-    role: roleLower(u.role),
-    provider: (u.provider as AuthProvider) || 'OTP',
-    roleLabel: roleLabelMap[u.role] || u.roleLabel || 'کاربر',
-    loggedInAt: Date.now(),
+    role: u.role,
+    provider: u.provider || 'OTP',
+    roleLabel: u.roleLabel || ROLE_LABELS[u.role],
   };
 }
 
@@ -187,18 +177,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Legacy login (kept for backward compat)
   const login = useCallback(
     (role: UserRole, name: string, provider: AuthProvider) => {
-      const roleLabelMap: Record<string, string> = {
-        admin: 'مدیر سیستم',
-        lawyer: 'متخصص حقوقی',
-        user: 'کاربر',
-      };
       const next: AuthUser = {
         id: `u${Date.now()}`,
         name: name || 'کاربر احراز‌هویت‌شده',
         role,
         provider,
-        roleLabel: roleLabelMap[role] || 'کاربر',
-        loggedInAt: Date.now(),
+        roleLabel: ROLE_LABELS[role],
       };
       setUser(next);
       return next;
@@ -222,9 +206,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     hasRole,
     hasAnyRole,
     roles: {
-      admin: user?.role === 'admin',
-      lawyer: user?.role === 'lawyer',
-      user: user?.role === 'user',
+      SUPERADMIN: user?.role === 'SUPERADMIN',
+      ADMIN: user?.role === 'ADMIN',
+      LAWYER: user?.role === 'LAWYER',
+      USER: user?.role === 'USER',
     },
   };
 
@@ -241,8 +226,5 @@ export function useAuth(): AuthContextValue {
   if (!ctx) throw new Error('useAuth must be used within AuthProvider');
   return ctx;
 }
-
-// We need useContext — re-import to avoid pulling from 'react' twice in types
-import { useContext } from 'react';
 
 export default useAuth;

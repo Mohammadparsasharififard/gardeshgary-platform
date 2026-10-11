@@ -32,6 +32,16 @@ const EXPERT_FILTERS = [
   'متخصص حقوق هواپیمایی',
 ];
 
+// Consultation types — the backend Booking enum values sent to the API.
+type ConsultationType = 'IN_PERSON' | 'PHONE' | 'VIDEO';
+
+// Persian labels for the consultation-type enum values (display only).
+const CONSULT_TYPE_LABELS: Record<ConsultationType, string> = {
+  PHONE: 'تلفنی',
+  VIDEO: 'ویدیویی',
+  IN_PERSON: 'حضوری',
+};
+
 export default function LegalExperts() {
   const { showToast } = useToast();
   const { user } = useAuth();
@@ -42,7 +52,7 @@ export default function LegalExperts() {
   const [error, setError] = useState<string | null>(null);
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
   const [selectedTime, setSelectedTime] = useState('شنبه ۱۰:۰۰');
-  const [consultType, setConsultType] = useState<"IN_PERSON" | "PHONE" | "VIDEO">('PHONE');
+  const [consultType, setConsultType] = useState<ConsultationType>('PHONE');
   const [consultDesc, setConsultDesc] = useState('');
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [appointmentCode, setAppointmentCode] = useState('');
@@ -129,9 +139,9 @@ export default function LegalExperts() {
       });
       if (error) throw new Error(error);
       if (data) {
-        setAppointmentCode(data.voucherCode);
+        setAppointmentCode(data.booking.voucherCode);
         setBookingConfirmed(true);
-        showToast(`نوبت مشاوره با ${selectedExpert.name} با کد ${data.voucherCode} با موفقیت رزرو گردید`, 'success');
+        showToast(`نوبت مشاوره با ${selectedExpert.name} با کد ${data.booking.voucherCode} با موفقیت رزرو گردید`, 'success');
       }
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'خطا در ثبت رزرو';
@@ -412,13 +422,16 @@ export default function LegalExperts() {
                     <label className="block text-xs font-bold text-navy-700 mb-1.5">نوع مشاوره مورد نظر:</label>
                     <select
                       value={consultType}
-                      onChange={(e) => setConsultType(e.target.value)}
+                      onChange={(e) => {
+                        const v = e.target.value;
+                        if (v === 'IN_PERSON' || v === 'PHONE' || v === 'VIDEO') setConsultType(v);
+                      }}
                       aria-label="نوع مشاوره مورد نظر"
                       className="w-full px-4 py-3 bg-navy-50 border border-navy-200 rounded-xl text-xs sm:text-sm text-navy-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                     >
-                      <option value="تلفنی">مشاوره تلفنی مستقیم (۳۰ دقیقه)</option>
-                      <option value="ویدیویی">جلسه تصویری آنلاین و بررسی اسناد (۴۵ دقیقه)</option>
-                      <option value="حضوری">مشاوره حضوری در دفتر وکالت (۱ ساعت)</option>
+                      <option value="PHONE">مشاوره تلفنی مستقیم (۳۰ دقیقه)</option>
+                      <option value="VIDEO">جلسه تصویری آنلاین و بررسی اسناد (۴۵ دقیقه)</option>
+                      <option value="IN_PERSON">مشاوره حضوری در دفتر وکالت (۱ ساعت)</option>
                     </select>
                   </div>
 
@@ -468,7 +481,7 @@ export default function LegalExperts() {
                     </div>
                     <div className="flex justify-between">
                       <span className="text-navy-400">نوع جلسه:</span>
-                      <span className="font-bold text-navy-800">{consultType}</span>
+                      <span className="font-bold text-navy-800">{CONSULT_TYPE_LABELS[consultType]}</span>
                     </div>
                   </div>
 

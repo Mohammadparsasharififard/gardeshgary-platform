@@ -286,8 +286,8 @@ function DashboardPage() {
   }
   return (
     <Suspense fallback={<LazyFallback variant="cards" />}>
-      {user.role === 'admin' && <AdminDashboard />}
-      {user.role === 'user' && <UserDashboard />}
+      {(user.role === 'SUPERADMIN' || user.role === 'ADMIN') && <AdminDashboard />}
+      {user.role === 'USER' && <UserDashboard />}
     </Suspense>
   );
 }

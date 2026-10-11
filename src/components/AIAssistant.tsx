@@ -2,7 +2,7 @@ import { useState, useRef, useEffect, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Sparkles, Send, Bot, User, Scale, FileText, Lightbulb, AlertCircle, ArrowRight, Copy, Check, ChevronDown, Microscope, FilePen, MessageCircle,
-  ShieldCheck, Database, Gavel, Trash2, Printer, Mic, Volume2, VolumeX,
+  ShieldCheck, Database, Gavel, Trash2, Printer,
   Radio, Cpu, Activity, Maximize2, Minimize2
 } from 'lucide-react';
 import { quickPrompts, aiModes, type ChatMessage, type AIMode } from '@/data';
@@ -41,8 +41,6 @@ export default function AIAssistant() {
   const [copiedMsgId, setCopiedMsgId] = useState<number | null>(null);
   const [copiedFullId, setCopiedFullId] = useState<number | null>(null);
   const [exportMessage, setExportMessage] = useState<ChatMessage | null>(null);
-  const [soundEnabled, setSoundEnabled] = useState(true);
-  const [isRecording, setIsRecording] = useState(false);
   const [isExpandedFull, setIsExpandedFull] = useState(false);
   const [scannedLawIndex, setScannedLawIndex] = useState(0);
 
@@ -115,16 +113,6 @@ export default function AIAssistant() {
       },
     ]);
     showToast('تاریخچه گفتگو پاکسازی شد', 'info');
-  };
-
-  const handleVoiceSim = () => {
-    setIsRecording(true);
-    showToast('در حال دریافت صوت و تبدیل به متن حقوقی...', 'info');
-    setTimeout(() => {
-      setIsRecording(false);
-      setInput('آیا هتل حق دارد در صورت کنسلی رزرو، هزینه شب‌های بعد را کسر کند؟');
-      showToast('گفتار صوتی با موفقیت پردازش شد', 'success');
-    }, 2000);
   };
 
   const handleCopyFull = (msg: ChatMessage) => {
@@ -232,32 +220,6 @@ export default function AIAssistant() {
                     {activeScanningLaws[scannedLawIndex]}
                   </span>
                 </div>
-              </div>
-
-              {/* Sound & Voice Simulator Controls */}
-              <div className="flex items-center justify-between gap-2 pt-4 border-t border-white/10 mt-4 text-xs">
-                <button
-                  onClick={handleVoiceSim}
-                  disabled={isRecording}
-                  className={`flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl font-bold transition-all ${
-                    isRecording
-                      ? 'bg-red-600 text-white animate-pulse'
-                      : 'bg-white/10 hover:bg-emerald-500/20 hover:border-emerald-400/40 border border-white/10 text-navy-200'
-                  }`}
-                >
-                  <Mic size={14} className={isRecording ? 'animate-bounce' : 'text-emerald-400'} />
-                  <span>{isRecording ? 'در حال ضبط صوت...' : 'گفتگوی صوتی (Mic)'}</span>
-                </button>
-
-                <button
-                  onClick={() => { setSoundEnabled(!soundEnabled); showToast(soundEnabled ? 'صدا غیرفعال شد' : 'جلوه‌های صوتی فعال شد', 'info'); }}
-                  className="p-2.5 rounded-xl bg-white/10 hover:bg-white/20 text-navy-300 hover:text-white transition-colors"
-                  title="افکت صوتی نئون"
-                  aria-label={soundEnabled ? 'غیرفعال‌سازی جلوه‌های صوتی' : 'فعال‌سازی جلوه‌های صوتی'}
-                  aria-pressed={soundEnabled}
-                >
-                  {soundEnabled ? <Volume2 size={16} className="text-emerald-400" /> : <VolumeX size={16} />}
-                </button>
               </div>
             </div>
 
@@ -593,17 +555,8 @@ export default function AIAssistant() {
                       onKeyDown={(e) => e.key === 'Enter' && handleSend(input)}
                       placeholder="سوال یا اختلاف حقوقی خود را اینجا بنویسید (مثلاً: گم شدن چمدان در پرواز چه میزان خسارت دارد؟)..."
                       aria-label="سوال یا اختلاف حقوقی"
-                      className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/15 rounded-2xl text-sm text-white placeholder-navy-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
+                      className="w-full pl-4 pr-4 py-4 bg-white/5 border border-white/15 rounded-2xl text-sm text-white placeholder-navy-400 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition-all"
                     />
-                    <button
-                      type="button"
-                      onClick={handleVoiceSim}
-                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-navy-400 hover:text-emerald-400 transition-colors p-1"
-                      title="شبیه‌ساز ورودی صوتی"
-                      aria-label="ورودی صوتی"
-                    >
-                      <Mic size={18} />
-                    </button>
                   </div>
 
                   <button
