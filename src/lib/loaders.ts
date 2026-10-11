@@ -8,7 +8,7 @@
  *     the backend API. If the API is unreachable, the static fallback is kept.
  *   - This way the UI never breaks, even if the backend is down.
  */
-import { apiClient, type Law, type Lawyer, type RightsGuide, type Claim, type Booking, type Notification, type AdminStat, type AdminActivity } from './api';
+import { apiClient, type Law, type Lawyer, type RightsGuide, type Claim, type Booking, type Notification, type AdminStat, type AdminActivity, type NewsItem, type ArticleItem } from './api';
 
 // ─── In-memory cache + loaders ────────────────────────────────────────────
 type LoadResult<T> = { data: T | null; error: string | null };
@@ -62,6 +62,16 @@ export const dataLoaders = {
   // Rights guides
   async loadRightsGuides(target?: 'TOURIST' | 'BUSINESS' | 'SPORTS') {
     return safeLoad(() => apiClient.listRightsGuides(target).then((r) => r.guides));
+  },
+
+  // News (public feed)
+  async loadNews(params?: { q?: string; category?: string; limit?: number; offset?: number }) {
+    return safeLoad(() => apiClient.listNews(params).then((r) => r.news));
+  },
+
+  // Articles (public feed)
+  async loadArticles(params?: { q?: string; category?: string; limit?: number; offset?: number }) {
+    return safeLoad(() => apiClient.listArticles(params).then((r) => r.articles));
   },
 
   // Claims
@@ -170,4 +180,6 @@ export type {
   Notification,
   AdminStat,
   AdminActivity,
+  NewsItem,
+  ArticleItem,
 };

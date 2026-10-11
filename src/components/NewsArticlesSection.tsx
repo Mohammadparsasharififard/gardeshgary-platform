@@ -1,22 +1,117 @@
-import { useState } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Newspaper, Clock, User, Calendar, ArrowLeft, X, Share2, Printer
+  Newspaper, Clock, User, Calendar, ArrowLeft, X, Share2, Printer,
+  AlertTriangle, RefreshCw, Home
 } from 'lucide-react';
-import { newsArticles, type NewsArticle } from '@/data';
 import { useToast } from '@/components/Toast';
+import { dataLoaders } from '@/lib/loaders';
+
+// Card shape rendered by the section — mapped from the backend NewsItem and
+// ArticleItem models (NO static fallback; API data only).
+interface FeedItem {
+  id: string;
+  kind: 'news' | 'article';
+  title: string;
+  category: string;
+  date: string;
+  readTime: string;
+  excerpt: string;
+  content: string;
+  author: string;
+  imageBg: string;
+}
+
+// Header banner gradients (cycled) — keeps the section's visual language.
+const BANNER_GRADIENTS = [
+  'from-emerald-900 to-navy-950',
+  'from-amber-900 to-navy-950',
+  'from-blue-900 to-navy-950',
+];
+
+const faDigits = (n: number) => String(n).replace(/\d/g, (d) => '۰۱۲۳۴۵۶۷۸۹'[Number(d)]);
+
+const formatDate = (iso: string) => {
+  try {
+    return new Date(iso).toLocaleDateString('fa-IR');
+  } catch {
+    return '';
+  }
+};
+
+// Reading-time label: articles expose readingTimeMin; news is estimated
+// from the content length (~600 chars per minute).
+const readTimeLabel = (chars: number, readingTimeMin?: number) =>
+  `${faDigits(readingTimeMin ?? Math.max(1, Math.ceil(chars / 600)))} دقیقه`;
 
 export default function NewsArticlesSection() {
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState<string>('همه');
-  const [selectedArticle, setSelectedArticle] = useState<NewsArticle | null>(null);
+  const [selectedArticle, setSelectedArticle] = useState<FeedItem | null>(null);
+  const [articles, setArticles] = useState<FeedItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const categories = ['همه', 'اخبار رسمی', 'بخشنامه‌های جدید', 'مقالات حقوقی'];
+  // Load the real news + articles feeds from the backend on mount.
+  const loadFeed = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    const [newsRes, articlesRes] = await Promise.all([
+      dataLoaders.loadNews({ limit: 24 }),
+      dataLoaders.loadArticles({ limit: 24 }),
+    ]);
+    const items: FeedItem[] = [];
+    (newsRes.data || []).forEach((n, i) => {
+      items.push({
+        id: `news-${n.id}`,
+        kind: 'news',
+        title: n.title,
+        category: n.category,
+        date: formatDate(n.publishedAt),
+        readTime: readTimeLabel(n.summary.length + n.content.length),
+        excerpt: n.summary,
+        content: n.content,
+        author: n.authorName || 'تحریریه پلتفرم',
+        imageBg: BANNER_GRADIENTS[i % BANNER_GRADIENTS.length],
+      });
+    });
+    (articlesRes.data || []).forEach((a, i) => {
+      items.push({
+        id: `article-${a.id}`,
+        kind: 'article',
+        title: a.title,
+        category: a.category,
+        date: formatDate(a.publishedAt),
+        readTime: readTimeLabel(a.summary.length + a.content.length, a.readingTimeMin),
+        excerpt: a.summary,
+        content: a.content,
+        author: a.authorName || 'تحریریه پلتفرم',
+        imageBg: BANNER_GRADIENTS[(i + 1) % BANNER_GRADIENTS.length],
+      });
+    });
+    setArticles(items);
+    // Only surface an error when BOTH feeds are unreachable.
+    if (!newsRes.data && !articlesRes.data) {
+      setError(newsRes.error || articlesRes.error || 'خطای ناشناخته');
+    }
+    setLoading(false);
+  }, []);
 
-  const filteredArticles = newsArticles.filter((art) => {
-    if (activeTab === 'همه') return true;
-    return art.category === activeTab;
-  });
+  useEffect(() => {
+    void loadFeed();
+  }, [loadFeed]);
+
+  const categories = useMemo(
+    () => ['همه', ...Array.from(new Set(articles.map((art) => art.category)))],
+    [articles],
+  );
+
+  const filteredArticles = useMemo(() => {
+    return articles.filter((art) => {
+      if (activeTab === 'همه') return true;
+      return art.category === activeTab;
+    });
+  }, [activeTab, articles]);
 
   const handleShare = (title: string) => {
     navigator.clipboard?.writeText(window.location.href);
@@ -62,8 +157,45 @@ export default function NewsArticlesSection() {
           ))}
         </div>
 
-        {/* Articles Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-7">
+        {/* Articles Grid — real API data only */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16" aria-live="polite">
+            <span className="w-8 h-8 border-2 border-blue-200 border-t-blue-600 rounded-full animate-spin"></span>
+            <p className="text-sm text-navy-500">در حال بارگذاری اخبار و مقالات...</p>
+          </div>
+        ) : error ? (
+          <div className="max-w-md mx-auto text-center bg-white rounded-2xl border border-navy-100 p-8">
+            <div className="w-14 h-14 rounded-full bg-red-50 border border-red-100 flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle size={26} className="text-red-500" />
+            </div>
+            <h4 className="text-base font-bold text-navy-800 mb-1.5">خطا در بارگذاری اخبار و مقالات</h4>
+            <p className="text-sm text-navy-500 mb-5 leading-relaxed">{error}</p>
+            <button
+              onClick={() => void loadFeed()}
+              className="inline-flex items-center gap-2 bg-navy-900 hover:bg-navy-800 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors"
+            >
+              <RefreshCw size={14} />
+              تلاش مجدد
+            </button>
+          </div>
+        ) : articles.length === 0 ? (
+          <div className="max-w-md mx-auto text-center bg-white rounded-2xl border border-navy-100 p-8">
+            <div className="w-14 h-14 rounded-full bg-navy-50 border-2 border-dashed border-navy-200 flex items-center justify-center mx-auto mb-4">
+              <Newspaper size={26} className="text-navy-300" />
+            </div>
+            <h4 className="text-base font-bold text-navy-800 mb-1.5">خبری منتشر نشده است</h4>
+            <p className="text-sm text-navy-500 mb-5 leading-relaxed">هنوز خبر یا مقاله‌ای در پلتفرم منتشر نشده است.</p>
+            <a
+              href="#/"
+              className="inline-flex items-center gap-2 bg-navy-900 hover:bg-navy-800 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors"
+            >
+              <Home size={14} />
+              بازگشت به خانه
+            </a>
+          </div>
+        ) : (
+          <>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-7">
           {filteredArticles.map((article) => (
             <motion.div
               key={article.id}
@@ -111,7 +243,15 @@ export default function NewsArticlesSection() {
               </div>
             </motion.div>
           ))}
-        </div>
+            </div>
+
+            {filteredArticles.length === 0 && (
+              <div className="text-center py-12 text-sm text-navy-400 bg-white rounded-3xl border border-navy-100 max-w-md mx-auto">
+                موردی در این دسته‌بندی منتشر نشده است.
+              </div>
+            )}
+          </>
+        )}
       </div>
 
       {/* Article Detail Reader Modal */}

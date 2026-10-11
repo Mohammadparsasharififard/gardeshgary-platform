@@ -4,7 +4,7 @@ import {
   Sparkles, Search, BookOpen, ShieldCheck, ArrowDown,
   TrendingUp, ArrowLeft
 } from 'lucide-react';
-import { lawDatabase, lawCategories, type LawItem } from '@/data';
+import { lawCategories, type LawItem } from '@/data';
 import { dataLoaders } from '@/lib/loaders';
 import ParticleField from '@/components/ParticleField';
 import LawDetailModal from '@/components/LawDetailModal';
@@ -14,7 +14,9 @@ export default function Hero() {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('همه');
   const [selectedLaw, setSelectedLaw] = useState<LawItem | null>(null);
-  const [liveLaws, setLiveLaws] = useState<LawItem[]>(lawDatabase);
+  // Starts empty — populated ONLY from the backend API (no demo fallback).
+  const [liveLaws, setLiveLaws] = useState<LawItem[]>([]);
+  const [loadingLaws, setLoadingLaws] = useState(true);
   // Use refs for mouse parallax — avoids a re-render on every mousemove event
   const heroRef = useRef<HTMLElement>(null);
   const tiltRef = useRef<HTMLDivElement>(null);
@@ -25,9 +27,10 @@ export default function Hero() {
   useEffect(() => {
     void (async () => {
       const { data } = await dataLoaders.loadLaws();
-      if (data && data.length > 0) {
+      if (data) {
         setLiveLaws(data.slice(0, 50) as unknown as LawItem[]);
       }
+      setLoadingLaws(false);
     })();
   }, []);
 
@@ -259,7 +262,15 @@ export default function Hero() {
                   </motion.button>
                 ))}
 
-                {filtered.length === 0 && (
+                {loadingLaws && (
+                  <div className="text-center py-8 text-navy-400 text-xs">در حال بارگذاری قوانین...</div>
+                )}
+
+                {!loadingLaws && liveLaws.length === 0 && (
+                  <div className="text-center py-8 text-navy-400 text-xs">قانونی ثبت نشده است</div>
+                )}
+
+                {!loadingLaws && liveLaws.length > 0 && filtered.length === 0 && (
                   <div className="text-center py-8 text-navy-400 text-xs">نتیجه‌ای منطبق با عبارت مورد نظر یافت نشد</div>
                 )}
               </div>
@@ -268,7 +279,7 @@ export default function Hero() {
               <div className="mt-4 pt-3 border-t border-white/10 flex items-center justify-between">
                 <span className="text-[10px] text-navy-400 flex items-center gap-1">
                   <TrendingUp size={12} className="text-emerald-400" />
-                  {lawDatabase.length} مقرره قانونی مستند
+                  {liveLaws.length.toLocaleString('fa-IR')} مقرره قانونی مستند
                 </span>
                 <span className="text-[10px] text-emerald-400 flex items-center gap-1.5 font-medium">
                   <span className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></span>

@@ -1,21 +1,45 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Star, Calendar, MapPin, Award, Briefcase, X, MessageSquare, Search, CheckCircle2
+  Star, Calendar, MapPin, Award, Briefcase, X, MessageSquare, Search, CheckCircle2,
+  AlertTriangle, RefreshCw, Home
 } from 'lucide-react';
-import { experts as staticExperts, expertFilters } from '@/data';
 import { useToast } from '@/components/Toast';
 import { dataLoaders } from '@/lib/loaders';
 import { useAuth } from '@/hooks/useAuth';
 
-type Expert = typeof staticExperts[0];
+// Card shape the UI renders (mapped from the backend Lawyer model).
+interface Expert {
+  id: number;
+  name: string;
+  specialty: string;
+  badges: string[];
+  rating: number;
+  reviews: number;
+  experience: string;
+  city: string;
+  avatar: string;
+  bio: string;
+}
+
+// Filter tabs for the directory (badge-based).
+const EXPERT_FILTERS = [
+  'همه',
+  'متخصص قراردادهای اقامتی',
+  'حقوق بین‌الملل گردشگری',
+  'حقوق مصرف‌کننده',
+  'متخصص بیمه مسافرتی',
+  'متخصص حقوق هواپیمایی',
+];
 
 export default function LegalExperts() {
   const { showToast } = useToast();
   const { user } = useAuth();
   const [filter, setFilter] = useState('همه');
   const [search, setSearch] = useState('');
-  const [experts, setExperts] = useState<Expert[]>(staticExperts as unknown as Expert[]);
+  const [experts, setExperts] = useState<Expert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [selectedExpert, setSelectedExpert] = useState<Expert | null>(null);
   const [selectedTime, setSelectedTime] = useState('شنبه ۱۰:۰۰');
   const [consultType, setConsultType] = useState<"IN_PERSON" | "PHONE" | "VIDEO">('PHONE');
@@ -24,13 +48,19 @@ export default function LegalExperts() {
   const [appointmentCode, setAppointmentCode] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  // Load real lawyers from the backend on mount
-  useEffect(() => {
-    void (async () => {
-      const { data } = await dataLoaders.loadLawyers({ verified: true });
-      if (data && data.length > 0) {
-        // Map backend Lawyer type to the Expert shape the UI expects
-        const mapped: Expert[] = data.map((l) => ({
+  // Load real lawyers from the backend (no static fallback — the directory
+  // shows ONLY what the API returns, with clean empty/error states).
+  const loadExperts = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    const { data, error: loadError } = await dataLoaders.loadLawyers({ verified: true });
+    if (loadError) {
+      setError(loadError);
+      setExperts([]);
+    } else {
+      // Map backend Lawyer type to the Expert shape the UI expects
+      setExperts(
+        (data || []).map((l) => ({
           id: Number(l.id.slice(-6).replace(/\D/g, '').slice(0, 6)) || 0,
           name: l.name,
           specialty: l.specialty,
@@ -41,11 +71,15 @@ export default function LegalExperts() {
           city: l.city,
           avatar: l.avatar || l.name.slice(0, 2),
           bio: l.bio,
-        }));
-        setExperts(mapped);
-      }
-    })();
+        })),
+      );
+    }
+    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    void loadExperts();
+  }, [loadExperts]);
 
   const filtered = useMemo(() => {
     return experts.filter((e) => {
@@ -162,7 +196,7 @@ export default function LegalExperts() {
 
         {/* Filter Tabs */}
         <div className="flex flex-wrap justify-center gap-2 mb-10">
-          {expertFilters.map((f) => (
+          {EXPERT_FILTERS.map((f) => (
             <button
               key={f}
               onClick={() => setFilter(f)}
@@ -177,8 +211,45 @@ export default function LegalExperts() {
           ))}
         </div>
 
-        {/* Experts Grid */}
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        {/* Experts Grid — real API data only */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-16" aria-live="polite">
+            <span className="w-8 h-8 border-2 border-emerald-200 border-t-emerald-600 rounded-full animate-spin"></span>
+            <p className="text-sm text-navy-500 dark:text-navy-400">در حال بارگذاری متخصصان...</p>
+          </div>
+        ) : error ? (
+          <div className="max-w-md mx-auto text-center bg-white dark:bg-night-900 rounded-2xl border border-night-100 dark:border-night-800 p-8">
+            <div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle size={26} className="text-red-500" />
+            </div>
+            <h4 className="text-base font-bold text-navy-800 dark:text-white mb-1.5">خطا در بارگذاری متخصصان</h4>
+            <p className="text-sm text-navy-500 dark:text-navy-400 mb-5 leading-relaxed">{error}</p>
+            <button
+              onClick={() => void loadExperts()}
+              className="inline-flex items-center gap-2 bg-navy-900 hover:bg-navy-800 dark:bg-white dark:text-night-900 dark:hover:bg-night-100 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors"
+            >
+              <RefreshCw size={14} />
+              تلاش مجدد
+            </button>
+          </div>
+        ) : experts.length === 0 ? (
+          <div className="max-w-md mx-auto text-center bg-white dark:bg-night-900 rounded-2xl border border-night-100 dark:border-night-800 p-8">
+            <div className="w-14 h-14 rounded-full bg-navy-50 dark:bg-night-800 border-2 border-dashed border-navy-200 dark:border-night-700 flex items-center justify-center mx-auto mb-4">
+              <Briefcase size={26} className="text-navy-300 dark:text-navy-600" />
+            </div>
+            <h4 className="text-base font-bold text-navy-800 dark:text-white mb-1.5">متخصصی ثبت نشده است</h4>
+            <p className="text-sm text-navy-500 dark:text-navy-400 mb-5 leading-relaxed">هنوز وکیل متخصص حقوق گردشگری در پلتفرم ثبت نشده است.</p>
+            <a
+              href="#/"
+              className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors shadow-glow"
+            >
+              <Home size={14} />
+              بازگشت به خانه
+            </a>
+          </div>
+        ) : (
+          <>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <AnimatePresence mode="popLayout">
             {filtered.map((expert) => (
               <motion.div
@@ -266,18 +337,16 @@ export default function LegalExperts() {
               </motion.div>
             ))}
           </AnimatePresence>
-        </div>
-
-        {filtered.length === 0 && (
-          <div className="text-center py-16">
-            <div className="w-20 h-20 rounded-full bg-navy-50 dark:bg-night-800 border-2 border-dashed border-navy-200 dark:border-night-700 flex items-center justify-center mx-auto mb-4">
-              <Briefcase size={32} className="text-navy-300 dark:text-navy-600" />
             </div>
-            <h4 className="text-base font-bold text-navy-800 dark:text-white mb-1.5">هنوز متخصصی ثبت نشده است</h4>
-            <p className="text-sm text-navy-500 dark:text-navy-400 max-w-md mx-auto leading-relaxed">
-              به‌زودی فهرست وکلای متخصص حقوق گردشگری در این بخش نمایش داده خواهد شد.
-            </p>
-          </div>
+
+            {filtered.length === 0 && (
+              <div className="text-center py-12">
+                <p className="text-sm text-navy-500 dark:text-navy-400 max-w-md mx-auto leading-relaxed">
+                  متخصصی مطابق جستجو یا دسته‌بندی انتخابی شما یافت نشد.
+                </p>
+              </div>
+            )}
+          </>
         )}
       </div>
 

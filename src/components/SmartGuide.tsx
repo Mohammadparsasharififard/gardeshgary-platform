@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Search, ArrowLeft, Scale, BookOpen, UserCheck, X } from 'lucide-react';
-import { lawDatabase, type LawItem } from '@/data';
+import { type LawItem } from '@/data';
 import { dataLoaders } from '@/lib/loaders';
 import { useToast } from '@/components/Toast';
 
@@ -23,7 +23,8 @@ export default function SmartGuide() {
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<GuideResult[]>([]);
   const [searching, setSearching] = useState(false);
-  const [liveLaws, setLiveLaws] = useState<LawItem[]>(lawDatabase);
+  // Starts empty — populated ONLY from the backend API (no demo fallback).
+  const [liveLaws, setLiveLaws] = useState<LawItem[]>([]);
 
   // Load real laws from the backend on mount (so the matcher uses the
   // latest data the admin has added). Uses the shared bulk loader —
@@ -31,7 +32,7 @@ export default function SmartGuide() {
   useEffect(() => {
     void (async () => {
       const { data } = await dataLoaders.loadLaws();
-      if (data && data.length > 0) {
+      if (data) {
         // Map backend Law to LawItem shape (they're compatible)
         setLiveLaws(data as unknown as LawItem[]);
       }

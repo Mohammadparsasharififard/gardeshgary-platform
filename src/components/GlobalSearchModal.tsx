@@ -1,15 +1,29 @@
 import { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  Search, X, BookOpen, Newspaper, Scale, Users
+  Search, X, Newspaper, Scale, Users
 } from 'lucide-react';
-import {
-  lawDatabase, encyclopediaTerms, newsArticles, rightsGuides, experts,
-  type LawItem
-} from '@/data';
+import { type LawItem } from '@/data';
+import { dataLoaders, type Lawyer, type RightsGuide } from '@/lib/loaders';
 import { useFocusTrap } from '@/hooks/useFocusTrap';
 
-type SearchFilter = 'all' | 'laws' | 'encyclopedia' | 'news' | 'rights' | 'experts';
+type SearchFilter = 'all' | 'laws' | 'news' | 'rights' | 'experts';
+
+// Searchable shape for the merged news + articles feeds.
+interface NewsSearchItem {
+  id: string;
+  title: string;
+  excerpt: string;
+  date: string;
+}
+
+const formatDate = (iso: string) => {
+  try {
+    return new Date(iso).toLocaleDateString('fa-IR');
+  } catch {
+    return '';
+  }
+};
 
 interface GlobalSearchModalProps {
   isOpen: boolean;
@@ -20,6 +34,12 @@ interface GlobalSearchModalProps {
 export default function GlobalSearchModal({ isOpen, onClose, onSelectLaw }: GlobalSearchModalProps) {
   const [query, setQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<SearchFilter>('all');
+  // Real API data only (no static fallback) — loaded on mount. The modal is
+  // lazily mounted while open, so this fetch runs when the user opens it.
+  const [laws, setLaws] = useState<LawItem[]>([]);
+  const [newsItems, setNewsItems] = useState<NewsSearchItem[]>([]);
+  const [guides, setGuides] = useState<RightsGuide[]>([]);
+  const [lawyers, setLawyers] = useState<Lawyer[]>([]);
 
   // Focus trap (Escape is already handled by the global listener below)
   const trapRef = useFocusTrap<HTMLDivElement>(isOpen);
@@ -38,24 +58,47 @@ export default function GlobalSearchModal({ isOpen, onClose, onSelectLaw }: Glob
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isOpen, onClose]);
 
+  // Load every searchable source from the backend. Sources that fail simply
+  // contribute no hits — the modal degrades gracefully.
+  useEffect(() => {
+    void (async () => {
+      const [lawsRes, newsRes, articlesRes, guidesRes, lawyersRes] = await Promise.all([
+        dataLoaders.loadLaws(),
+        dataLoaders.loadNews({ limit: 30 }),
+        dataLoaders.loadArticles({ limit: 30 }),
+        dataLoaders.loadRightsGuides(),
+        dataLoaders.loadLawyers({ verified: true }),
+      ]);
+      setLaws((lawsRes.data || []) as unknown as LawItem[]);
+      const feed: NewsSearchItem[] = [];
+      (newsRes.data || []).forEach((n) =>
+        feed.push({ id: `news-${n.id}`, title: n.title, excerpt: n.summary, date: formatDate(n.publishedAt) }),
+      );
+      (articlesRes.data || []).forEach((a) =>
+        feed.push({ id: `article-${a.id}`, title: a.title, excerpt: a.summary, date: formatDate(a.publishedAt) }),
+      );
+      setNewsItems(feed);
+      setGuides(guidesRes.data || []);
+      setLawyers(lawyersRes.data || []);
+    })();
+  }, []);
+
   const searchResults = useMemo(() => {
-    if (!query.trim()) return { laws: [], encyclopedia: [], news: [], rights: [], lawyers: [] };
+    if (!query.trim()) return { laws: [], news: [], rights: [], lawyers: [] };
     const q = query.trim().toLowerCase();
 
-    const laws = lawDatabase.filter((l) => l.title.includes(q) || l.excerpt.includes(q) || l.article.includes(q));
-    const encyclopedia = encyclopediaTerms.filter((e) => e.term.includes(q) || e.shortDef.includes(q) || e.category.includes(q));
-    const news = newsArticles.filter((n) => n.title.includes(q) || n.excerpt.includes(q));
-    const rights = rightsGuides.filter((r) => r.title.includes(q) || r.summary.includes(q));
-    const lawyers = experts.filter((e) => e.name.includes(q) || e.specialty.includes(q) || e.city.includes(q));
+    const matchedLaws = laws.filter((l) => l.title.includes(q) || l.excerpt.includes(q) || l.article.includes(q));
+    const news = newsItems.filter((n) => n.title.includes(q) || n.excerpt.includes(q));
+    const rights = guides.filter((r) => r.title.includes(q) || r.summary.includes(q));
+    const matchedLawyers = lawyers.filter((e) => e.name.includes(q) || e.specialty.includes(q) || e.city.includes(q));
 
-    return { laws, encyclopedia, news, rights, lawyers };
-  }, [query]);
+    return { laws: matchedLaws, news, rights, lawyers: matchedLawyers };
+  }, [query, laws, newsItems, guides, lawyers]);
 
   if (!isOpen) return null;
 
   const totalResultsCount =
     searchResults.laws.length +
-    searchResults.encyclopedia.length +
     searchResults.news.length +
     searchResults.rights.length +
     searchResults.lawyers.length;
@@ -89,7 +132,7 @@ export default function GlobalSearchModal({ isOpen, onClose, onSelectLaw }: Glob
               aria-label="عبارت جستجو"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="جستجوی هوشمند در قوانین، دانشنامه، اخبار، حقوق مسافر و وکلا..."
+              placeholder="جستجوی هوشمند در قوانین، اخبار، حقوق مسافر و وکلا..."
               className="w-full bg-transparent text-sm sm:text-base font-medium text-navy-900 placeholder-navy-400 focus:outline-none"
             />
             <div className="flex items-center gap-2 flex-shrink-0">
@@ -111,7 +154,6 @@ export default function GlobalSearchModal({ isOpen, onClose, onSelectLaw }: Glob
             {[
               { id: 'all', label: 'همه بخش‌ها' },
               { id: 'laws', label: 'قوانین' },
-              { id: 'encyclopedia', label: 'دانشنامه' },
               { id: 'news', label: 'اخبار' },
               { id: 'rights', label: 'حقوق گردشگر' },
               { id: 'experts', label: 'متخصصان' },
@@ -173,36 +215,6 @@ export default function GlobalSearchModal({ isOpen, onClose, onSelectLaw }: Glob
                           </div>
                           <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-semibold whitespace-nowrap mr-2">
                             {law.article}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* ENCYCLOPEDIA */}
-                {(activeFilter === 'all' || activeFilter === 'encyclopedia') && searchResults.encyclopedia.length > 0 && (
-                  <div>
-                    <h4 className="font-bold text-navy-900 text-xs mb-2 flex items-center gap-1.5">
-                      <BookOpen size={14} className="text-amber-600" /> دانشنامه حقوقی ({searchResults.encyclopedia.length})
-                    </h4>
-                    <div className="space-y-1.5">
-                      {searchResults.encyclopedia.map((enc) => (
-                        <div
-                          key={enc.id}
-                          onClick={() => {
-                            onClose();
-                            const el = document.getElementById('encyclopedia');
-                            el?.scrollIntoView({ behavior: 'smooth' });
-                          }}
-                          className="p-3 bg-amber-50/40 hover:bg-amber-50 border border-amber-100 rounded-xl transition-all cursor-pointer flex items-center justify-between"
-                        >
-                          <div>
-                            <span className="font-bold text-amber-900 text-xs">{enc.term}</span>
-                            <p className="text-[11px] text-navy-600 line-clamp-1 mt-0.5">{enc.shortDef}</p>
-                          </div>
-                          <span className="text-[10px] bg-white text-amber-800 px-2 py-0.5 rounded font-medium whitespace-nowrap mr-2 border border-amber-200">
-                            {enc.category}
                           </span>
                         </div>
                       ))}

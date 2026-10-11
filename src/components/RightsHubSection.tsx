@@ -1,12 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShieldCheck, UserCheck, Building2, Compass, CheckCircle2, Scale, Sparkles, ChevronLeft,
-  Plane, Hotel, Shield, Flag, AlertTriangle, Phone,
+  Plane, Hotel, Shield, Flag, AlertTriangle, Phone, RefreshCw, Home,
 } from 'lucide-react';
-import { rightsGuides as staticGuides, type RightsGuide } from '@/data';
 import { dataLoaders } from '@/lib/loaders';
 import { useToast } from '@/components/Toast';
+
+// Card shape rendered by the hub — mapped from the backend RightsGuide model
+// (uppercase target) to the lowercase target the UI filters on.
+interface RightsGuide {
+  id: string;
+  title: string;
+  target: 'tourist' | 'business' | 'sports';
+  iconName: string;
+  summary: string;
+  details: string[];
+  lawCitations: string[];
+}
 
 interface RightsHubSectionProps {
   /** When set, force a specific category and hide the tab switcher.
@@ -57,19 +68,27 @@ export default function RightsHubSection({ forceTarget }: RightsHubSectionProps)
   const { showToast } = useToast();
   const [activeTarget, setActiveTarget] = useState<'tourist' | 'business' | 'sports'>(forceTarget || 'tourist');
   const [selectedGuide, setSelectedGuide] = useState<RightsGuide | null>(null);
-  const [guides, setGuides] = useState<RightsGuide[]>(staticGuides);
+  const [guides, setGuides] = useState<RightsGuide[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Load real rights guides from the backend on mount
-  useEffect(() => {
-    void (async () => {
-      // Map the target to the API enum
-      const apiTarget = forceTarget
-        ? ({ tourist: 'TOURIST', business: 'BUSINESS', sports: 'SPORTS' } as const)[forceTarget]
-        : undefined;
-      const { data } = await dataLoaders.loadRightsGuides(apiTarget);
-      if (data && data.length > 0) {
-        // Map backend RightsGuide (uppercase target) to the static RightsGuide shape
-        const mapped: RightsGuide[] = data.map((g) => ({
+  // Load real rights guides from the backend (no static fallback — the hub
+  // shows ONLY what the API returns, with clean empty/error states).
+  const loadGuides = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    // Map the target to the API enum
+    const apiTarget = forceTarget
+      ? ({ tourist: 'TOURIST', business: 'BUSINESS', sports: 'SPORTS' } as const)[forceTarget]
+      : undefined;
+    const { data, error: loadError } = await dataLoaders.loadRightsGuides(apiTarget);
+    if (loadError) {
+      setError(loadError);
+      setGuides([]);
+    } else {
+      // Map backend RightsGuide (uppercase target) to the UI shape
+      setGuides(
+        (data || []).map((g) => ({
           id: g.id,
           title: g.title,
           target: g.target.toLowerCase() as 'tourist' | 'business' | 'sports',
@@ -77,11 +96,15 @@ export default function RightsHubSection({ forceTarget }: RightsHubSectionProps)
           summary: g.summary,
           details: g.details,
           lawCitations: g.lawCitations,
-        }));
-        setGuides(mapped);
-      }
-    })();
+        })),
+      );
+    }
+    setLoading(false);
   }, [forceTarget]);
+
+  useEffect(() => {
+    void loadGuides();
+  }, [loadGuides]);
 
   // If forceTarget is set, always use it (ignore internal state)
   const currentTarget = forceTarget || activeTarget;
@@ -136,8 +159,44 @@ export default function RightsHubSection({ forceTarget }: RightsHubSectionProps)
             </motion.p>
           </div>
 
-          {/* Guides Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+          {/* Guides Grid — real API data only */}
+          {loading ? (
+            <div className="flex flex-col items-center justify-center gap-3 py-14" aria-live="polite">
+              <span className="w-8 h-8 border-2 border-jade-200 border-t-jade-600 rounded-full animate-spin"></span>
+              <p className="text-sm text-night-500 dark:text-night-400">در حال بارگذاری راهنماها...</p>
+            </div>
+          ) : error ? (
+            <div className="max-w-md mx-auto text-center bg-white dark:bg-night-900 rounded-2xl border border-night-100 dark:border-night-800 p-8">
+              <div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 flex items-center justify-center mx-auto mb-4">
+                <AlertTriangle size={26} className="text-red-500" />
+              </div>
+              <h4 className="text-base font-bold text-night-800 dark:text-white mb-1.5">خطا در بارگذاری راهنماها</h4>
+              <p className="text-sm text-night-500 dark:text-night-400 mb-5 leading-relaxed">{error}</p>
+              <button
+                onClick={() => void loadGuides()}
+                className="inline-flex items-center gap-2 bg-night-900 hover:bg-night-800 dark:bg-white dark:text-night-900 dark:hover:bg-night-100 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors"
+              >
+                <RefreshCw size={14} />
+                تلاش مجدد
+              </button>
+            </div>
+          ) : filteredGuides.length === 0 ? (
+            <div className="max-w-md mx-auto text-center bg-white dark:bg-night-900 rounded-2xl border border-night-100 dark:border-night-800 p-8">
+              <div className="w-14 h-14 rounded-full bg-night-50 dark:bg-night-800 border-2 border-dashed border-night-200 dark:border-night-700 flex items-center justify-center mx-auto mb-4">
+                <Compass size={26} className="text-night-300 dark:text-night-600" />
+              </div>
+              <h4 className="text-base font-bold text-night-800 dark:text-white mb-1.5">راهنمایی منتشر نشده است</h4>
+              <p className="text-sm text-night-500 dark:text-night-400 mb-5 leading-relaxed">هنوز راهنمای حقوقی برای این بخش در پلتفرم منتشر نشده است.</p>
+              <a
+                href="#/"
+                className="inline-flex items-center gap-2 bg-jade-600 hover:bg-jade-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors shadow-glow"
+              >
+                <Home size={14} />
+                بازگشت به خانه
+              </a>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
             {filteredGuides.map((guide, idx) => {
               const Icon = ICON_MAP[guide.iconName] || Scale;
               return (
@@ -174,14 +233,6 @@ export default function RightsHubSection({ forceTarget }: RightsHubSectionProps)
                 </motion.button>
               );
             })}
-          </div>
-
-          {filteredGuides.length === 0 && (
-            <div className="text-center py-12">
-              <AlertTriangle size={28} className="text-night-300 dark:text-night-600 mx-auto mb-2" />
-              <p className="text-sm text-night-400 dark:text-night-500">
-                راهنمایی برای این بخش به‌زودی اضافه خواهد شد.
-              </p>
             </div>
           )}
 
@@ -323,8 +374,44 @@ export default function RightsHubSection({ forceTarget }: RightsHubSectionProps)
           })}
         </div>
 
-        {/* Guides Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
+        {/* Guides Grid — real API data only */}
+        {loading ? (
+          <div className="flex flex-col items-center justify-center gap-3 py-14" aria-live="polite">
+            <span className="w-8 h-8 border-2 border-jade-200 border-t-jade-600 rounded-full animate-spin"></span>
+            <p className="text-sm text-night-500 dark:text-night-400">در حال بارگذاری راهنماها...</p>
+          </div>
+        ) : error ? (
+          <div className="max-w-md mx-auto text-center bg-white dark:bg-night-900 rounded-2xl border border-night-100 dark:border-night-800 p-8">
+            <div className="w-14 h-14 rounded-full bg-red-50 dark:bg-red-900/20 border border-red-100 dark:border-red-800/50 flex items-center justify-center mx-auto mb-4">
+              <AlertTriangle size={26} className="text-red-500" />
+            </div>
+            <h4 className="text-base font-bold text-night-800 dark:text-white mb-1.5">خطا در بارگذاری راهنماها</h4>
+            <p className="text-sm text-night-500 dark:text-night-400 mb-5 leading-relaxed">{error}</p>
+            <button
+              onClick={() => void loadGuides()}
+              className="inline-flex items-center gap-2 bg-night-900 hover:bg-night-800 dark:bg-white dark:text-night-900 dark:hover:bg-night-100 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors"
+            >
+              <RefreshCw size={14} />
+              تلاش مجدد
+            </button>
+          </div>
+        ) : filteredGuides.length === 0 ? (
+          <div className="max-w-md mx-auto text-center bg-white dark:bg-night-900 rounded-2xl border border-night-100 dark:border-night-800 p-8">
+            <div className="w-14 h-14 rounded-full bg-night-50 dark:bg-night-800 border-2 border-dashed border-night-200 dark:border-night-700 flex items-center justify-center mx-auto mb-4">
+              <Compass size={26} className="text-night-300 dark:text-night-600" />
+            </div>
+            <h4 className="text-base font-bold text-night-800 dark:text-white mb-1.5">راهنمایی منتشر نشده است</h4>
+            <p className="text-sm text-night-500 dark:text-night-400 mb-5 leading-relaxed">هنوز راهنمای حقوقی برای این بخش در پلتفرم منتشر نشده است.</p>
+            <a
+              href="#/"
+              className="inline-flex items-center gap-2 bg-jade-600 hover:bg-jade-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition-colors shadow-glow"
+            >
+              <Home size={14} />
+              بازگشت به خانه
+            </a>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 sm:gap-6">
           <AnimatePresence mode="popLayout">
             {filteredGuides.map((guide) => {
               const Icon = ICON_MAP[guide.iconName] || Scale;
@@ -365,11 +452,6 @@ export default function RightsHubSection({ forceTarget }: RightsHubSectionProps)
               );
             })}
           </AnimatePresence>
-        </div>
-
-        {filteredGuides.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-sm text-night-400 dark:text-night-500">راهنمایی برای این بخش به‌زودی اضافه خواهد شد.</p>
           </div>
         )}
       </div>
