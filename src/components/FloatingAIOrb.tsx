@@ -102,9 +102,6 @@ export default function FloatingAIOrb() {
             className="fixed bottom-24 right-4 sm:right-6 z-50 w-[92vw] sm:w-[420px] max-h-[85vh] bg-gradient-to-b from-navy-950/95 via-navy-900/95 to-navy-950/98 border border-emerald-500/40 rounded-3xl shadow-float backdrop-blur-2xl text-white overflow-hidden flex flex-col"
             dir="rtl"
           >
-            {/* Top Scanning Line */}
-            <div className="scanline"></div>
-
             {/* Panel Header */}
             <div className="p-4 sm:p-5 border-b border-white/10 flex items-center justify-between bg-white/5">
               <div className="flex items-center gap-2.5">

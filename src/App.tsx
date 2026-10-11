@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, lazy, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ChevronLeft, Home } from 'lucide-react';
+import { CalendarCheck, ChevronLeft, Home, Search } from 'lucide-react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import Footer from '@/components/Footer';
@@ -169,24 +169,6 @@ function NewsPage() {
   );
 }
 
-function EncyclopediaPage() {
-  return (
-    <>
-      <Reveal>
-        <Suspense fallback={<LazyFallback variant="cards" />}>
-          <EncyclopediaSection />
-        </Suspense>
-      </Reveal>
-      <SectionDivider variant="line" label="واژه‌نامه حقوقی" />
-      <Reveal>
-        <Suspense fallback={<LazyFallback variant="cards" />}>
-          <LegalGlossary />
-        </Suspense>
-      </Reveal>
-    </>
-  );
-}
-
 function AiAssistantPage() {
   return (
     <Reveal>
@@ -208,12 +190,41 @@ function ExpertsPage() {
 }
 
 function ConsultationPage() {
+  // Same-page anchor scroll (an href="#contact" would fight the hash router)
+  const scrollToContactForm = () => {
+    document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+  };
   return (
     <>
+      {/* Booking-focused entry — the full expert browser lives on #/experts */}
       <Reveal>
-        <Suspense fallback={<LazyFallback variant="cards" />}>
-          <LegalExperts />
-        </Suspense>
+        <section className="py-10 px-4 sm:px-6 lg:px-8">
+          <div className="max-w-xl mx-auto bg-white dark:bg-night-900 rounded-2xl border border-night-100 dark:border-night-800 p-8 text-center shadow-card">
+            <h2 className="text-xl sm:text-2xl font-extrabold text-night-900 dark:text-white mb-3">
+              رزرو مشاوره تخصصی حقوقی
+            </h2>
+            <p className="text-sm text-night-500 dark:text-night-400 leading-relaxed mb-6">
+              درخواست خود را ثبت کنید تا کارشناسان پلتفرم با شما هماهنگ شوند، یا از بانک متخصصان وکیل مناسب موضوع خود را بیابید.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+              <button
+                type="button"
+                onClick={scrollToContactForm}
+                className="inline-flex items-center justify-center gap-2 bg-jade-600 hover:bg-jade-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold transition-all shadow-glow"
+              >
+                <CalendarCheck size={16} />
+                ثبت درخواست مشاوره
+              </button>
+              <a
+                href="#/experts"
+                className="inline-flex items-center justify-center gap-2 bg-white dark:bg-night-800 text-night-700 dark:text-night-200 border border-night-200 dark:border-night-700 hover:border-jade-400 dark:hover:border-jade-500 px-5 py-2.5 rounded-xl text-sm font-bold transition-all"
+              >
+                <Search size={16} />
+                جستجو در بانک متخصصان
+              </a>
+            </div>
+          </div>
+        </section>
       </Reveal>
       <SectionDivider variant="line" label="تماس و رزرو" />
       <Reveal>
@@ -328,10 +339,9 @@ function App() {
     home: '',
     laws: 'بانک جامع قوانین، آیین‌نامه‌ها و بخشنامه‌های گردشگری ایران — جستجو، دانشنامه، حقوق مسافر، اخبار و مقایسه قوانین',
     news: 'آخرین اخبار و مقالات تخصصی حقوق گردشگری',
-    encyclopedia: 'دانشنامه جامع اصطلاحات و مفاهیم حقوق گردشگری',
     'ai-assistant': 'دستیار هوشمند حقوق گردشگری — پرسش و پاسخ با استناد به قوانین',
     experts: 'جستجو و معرفی وکلای متخصص حقوق گردشگری',
-    consultation: 'رزرو مشاوره تخصصی با وکلای حقوق گردشگری',
+    consultation: 'ثبت درخواست و رزرو مشاوره تخصصی حقوقی با کارشناسان پلتفرم',
     'traveler-rights': 'حقوق گردشگر — قوانین و مقررات حفاظت از حقوق مسافران',
     'business-rights': 'حقوق کسب‌وکارهای گردشگری — مقررات آژانس‌ها و هتل‌ها',
     'sports-rights': 'حقوق گردشگری ورزشی — مقررات ایمنی و مجوزها',
@@ -368,7 +378,6 @@ function App() {
               {route === 'home' && <HomePage />}
               {route === 'laws' && <LawsPage />}
               {route === 'news' && <NewsPage />}
-              {route === 'encyclopedia' && <EncyclopediaPage />}
               {route === 'ai-assistant' && <AiAssistantPage />}
               {route === 'experts' && <ExpertsPage />}
               {route === 'consultation' && <ConsultationPage />}

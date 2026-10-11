@@ -54,7 +54,17 @@ export default function AIAssistant() {
     return () => clearInterval(timer);
   }, []);
 
+  // Auto-scroll the chat to the latest message ONLY when messages/typing
+  // actually change during an interaction — NOT on mount. On mount this
+  // scrollIntoView scrolled the whole page to the chat end (~y=2050), which
+  // fought the route-change scroll reset right after every navigation back
+  // to home (audit Phase 2.4 — scrollY stayed ≈2140).
+  const firstChatScrollRun = useRef(true);
   useEffect(() => {
+    if (firstChatScrollRun.current) {
+      firstChatScrollRun.current = false;
+      return;
+    }
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, typing]);
 
@@ -180,8 +190,6 @@ export default function AIAssistant() {
           <div className="lg:col-span-4 space-y-4">
             {/* Live Telemetry Card */}
             <div className="cyber-glass rounded-3xl p-5 border border-emerald-500/30 shadow-card relative overflow-hidden">
-              <div className="scanline"></div>
-
               <div className="flex items-center justify-between pb-3 border-b border-white/10 mb-4">
                 <div className="flex items-center gap-2">
                   <Activity size={16} className="text-emerald-400" />
@@ -248,9 +256,6 @@ export default function AIAssistant() {
           {/* Right: Main Conversation Terminal (8 Cols on lg) */}
           <div className="lg:col-span-8">
             <div className="cyber-glass rounded-3xl shadow-float border border-emerald-500/30 overflow-hidden flex flex-col relative">
-              {/* Terminal Laser Scanline */}
-              <div className="scanline"></div>
-
               {/* Terminal Header */}
               <div className="bg-gradient-to-l from-navy-950 via-navy-900 to-navy-950 px-6 py-4.5 border-b border-white/10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div className="flex items-center gap-3">

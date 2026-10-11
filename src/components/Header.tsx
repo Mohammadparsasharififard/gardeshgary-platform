@@ -38,6 +38,12 @@ export default function Header({ onOpenShortcuts, onOpenNotifications, currentRo
   // behavior so the hero looks immersive.
   const isHome = currentRoute === 'home';
 
+  // Home sits over the dark hero: when scrolled there, swap the light glass bar
+  // for the dark one (.glass-nav-dark) and keep the white "over-hero" text
+  // variants. Sub-pages keep the exact current (light glass + dark text) look.
+  const homeScrolled = isHome && scrolled;
+  const whiteText = !scrolled || isHome;
+
   useEffect(() => {
     if (!isHome) {
       setScrolled(true);
@@ -75,7 +81,9 @@ export default function Header({ onOpenShortcuts, onOpenNotifications, currentRo
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
         className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 ${
-          scrolled ? 'glass-nav shadow-premium py-2' : 'bg-transparent py-3.5'
+          scrolled
+            ? `${homeScrolled ? 'glass-nav-dark' : 'glass-nav'} shadow-premium py-2`
+            : 'bg-transparent py-3.5'
         }`}
       >
         {/* Top accent line when scrolled */}
@@ -95,10 +103,10 @@ export default function Header({ onOpenShortcuts, onOpenNotifications, currentRo
                 <BrandLogo size={42} withText={false} />
               </motion.div>
               <div className="hidden sm:block">
-                <h1 className={`text-base font-extrabold leading-tight transition-colors duration-300 ${scrolled ? 'text-navy-900 dark:text-white' : 'text-white'}`}>
+                <h1 className={`text-base font-extrabold leading-tight transition-colors duration-300 ${whiteText ? 'text-white' : 'text-navy-900 dark:text-white'}`}>
                   پلتفرم ملی حقوق گردشگری
                 </h1>
-                <p className={`text-[10px] leading-tight font-medium transition-colors duration-300 ${scrolled ? 'text-emerald-700 dark:text-emerald-400' : 'text-emerald-300'}`}>
+                <p className={`text-[10px] leading-tight font-medium transition-colors duration-300 ${whiteText ? 'text-emerald-300' : 'text-emerald-700 dark:text-emerald-400'}`}>
                   مرجع تخصصی حقوقی گردشگری ایران
                 </p>
               </div>
@@ -112,10 +120,8 @@ export default function Header({ onOpenShortcuts, onOpenNotifications, currentRo
                 onClick={() => navigate('home')}
                 aria-current={currentRoute === 'home' ? 'page' : undefined}
                 className={`relative px-3 py-1.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
-                  scrolled
-                    ? currentRoute === 'home'
-                      ? 'text-jade-700 dark:text-jade-300 bg-jade-50/90 dark:bg-jade-900/40 font-extrabold'
-                      : 'text-navy-700 dark:text-navy-200 hover:bg-jade-50/50 dark:hover:bg-navy-800'
+                  !whiteText
+                    ? 'text-navy-700 dark:text-navy-200 hover:bg-jade-50/50 dark:hover:bg-navy-800'
                     : currentRoute === 'home'
                       ? 'text-white bg-white/20 font-extrabold'
                       : 'text-white/90 hover:bg-white/10'
@@ -133,7 +139,7 @@ export default function Header({ onOpenShortcuts, onOpenNotifications, currentRo
                     aria-haspopup="menu"
                     aria-expanded={openDropdown === group.label}
                     className={`flex items-center gap-1 px-3 py-1.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
-                      scrolled
+                      !whiteText
                         ? 'text-navy-700 dark:text-navy-200 hover:bg-jade-50/50 dark:hover:bg-navy-800'
                         : 'text-white/90 hover:bg-white/10'
                     }`}
@@ -181,7 +187,7 @@ export default function Header({ onOpenShortcuts, onOpenNotifications, currentRo
                 onClick={() => navigate('dashboard')}
                 aria-current={currentRoute === 'dashboard' ? 'page' : undefined}
                 className={`relative px-3 py-1.5 rounded-xl text-sm font-semibold whitespace-nowrap transition-all duration-200 ${
-                  scrolled
+                  !whiteText
                     ? currentRoute === 'dashboard'
                       ? 'text-jade-700 dark:text-jade-300 bg-jade-50/90 dark:bg-jade-900/40 font-extrabold'
                       : 'text-navy-700 dark:text-navy-200 hover:bg-jade-50/50 dark:hover:bg-navy-800'
@@ -201,7 +207,7 @@ export default function Header({ onOpenShortcuts, onOpenNotifications, currentRo
                 onClick={() => setShowSearchModal(true)}
                 aria-label="جستجوی هوشمند (میانبر: Ctrl و K)"
                 className={`flex items-center gap-1.5 px-2.5 py-2 rounded-xl text-xs shrink-0 transition-all ${
-                  scrolled
+                  !whiteText
                     ? 'bg-navy-50 dark:bg-navy-800 text-navy-600 dark:text-navy-200 hover:bg-navy-100 dark:hover:bg-navy-700 border border-navy-200 dark:border-navy-700'
                     : 'bg-white/10 text-white hover:bg-white/20 border border-white/15'
                 }`}
@@ -212,11 +218,11 @@ export default function Header({ onOpenShortcuts, onOpenNotifications, currentRo
               </button>
 
               {/* Theme toggle */}
-              <ThemeToggle variant="icon" scrolled={scrolled} />
+              <ThemeToggle variant="icon" scrolled={!whiteText} />
 
               {/* Font-size control — only on md+ */}
               <div className="hidden md:block">
-                <FontSizeControl scrolled={scrolled} />
+                <FontSizeControl scrolled={!whiteText} />
               </div>
 
               {/* Keyboard shortcuts help — only on md+ */}
@@ -226,7 +232,7 @@ export default function Header({ onOpenShortcuts, onOpenNotifications, currentRo
                 aria-label="راهنمای میانبرهای صفحه‌کلید (میانبر: ?)"
                 title="راهنمای میانبرها (؟)"
                 className={`hidden md:flex items-center justify-center w-9 h-9 rounded-xl transition-all ${
-                  scrolled
+                  !whiteText
                     ? 'bg-white dark:bg-navy-800 text-navy-600 dark:text-navy-200 hover:bg-navy-50 dark:hover:bg-navy-700 border border-navy-200 dark:border-navy-700'
                     : 'bg-white/10 text-white hover:bg-white/20 border border-white/15'
                 }`}
@@ -239,7 +245,7 @@ export default function Header({ onOpenShortcuts, onOpenNotifications, currentRo
                 onClick={() => onOpenNotifications?.()}
                 aria-label={`اعلان‌ها — ${unreadCount.toLocaleString('fa-IR')} مورد خوانده‌نشده`}
                 className={`relative flex items-center justify-center w-9 h-9 rounded-xl transition-all border ${
-                  scrolled
+                  !whiteText
                     ? 'bg-white dark:bg-navy-800 text-navy-600 dark:text-navy-200 hover:bg-emerald-50 dark:hover:bg-navy-700 hover:text-emerald-700 dark:hover:text-emerald-300 border-navy-200 dark:border-navy-700'
                     : 'bg-white/10 text-white hover:bg-white/20 border-white/15'
                 }`}
@@ -267,7 +273,7 @@ export default function Header({ onOpenShortcuts, onOpenNotifications, currentRo
                 onClick={() => setShowBookmarksPanel(true)}
                 aria-label={`علاقه‌مندی‌ها — ${count} مورد ذخیره‌شده`}
                 className={`relative flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs shrink-0 transition-all border ${
-                  scrolled
+                  !whiteText
                     ? 'bg-white dark:bg-navy-800 text-navy-600 dark:text-navy-200 hover:bg-emerald-50 dark:hover:bg-navy-700 hover:text-emerald-700 dark:hover:text-emerald-300 border-navy-200 dark:border-navy-700'
                     : 'bg-white/10 text-white hover:bg-white/20 border-white/15'
                 }`}
@@ -335,7 +341,7 @@ export default function Header({ onOpenShortcuts, onOpenNotifications, currentRo
                 aria-label={mobileOpen ? 'بستن منوی ناوبری' : 'باز کردن منوی ناوبری'}
                 aria-expanded={mobileOpen}
               >
-                {scrolled ? <Menu className="text-navy-900 dark:text-white" /> : <Menu className="text-white" />}
+                {whiteText ? <Menu className="text-white" /> : <Menu className="text-navy-900 dark:text-white" />}
               </button>
             </div>
           </div>

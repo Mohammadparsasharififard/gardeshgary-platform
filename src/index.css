@@ -152,6 +152,13 @@ h1, h2, h3, h4, h5, h6 {
   backdrop-filter: blur(18px) saturate(160%);
   -webkit-backdrop-filter: blur(18px) saturate(160%);
 }
+/* Dark glass header bar — used on the home route when scrolled so the bar
+   doesn't clash with the dark hero underneath (same values as .dark .glass-nav). */
+.glass-nav-dark {
+  background: rgba(8, 13, 26, 0.78);
+  backdrop-filter: blur(18px) saturate(160%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%);
+}
 .glass-card {
   background: rgba(255, 255, 255, 0.55);
   backdrop-filter: blur(16px);
@@ -267,25 +274,6 @@ h1, h2, h3, h4, h5, h6 {
   border-color: rgba(16, 185, 129, 0.4);
   box-shadow: 0 10px 40px -10px rgba(5, 150, 105, 0.25);
   transform: translateY(-2px);
-}
-
-/* ─── Scanner line animation ─── */
-@keyframes scanline {
-  0% { transform: translateY(-100%); opacity: 0; }
-  25% { opacity: 0.8; }
-  75% { opacity: 0.8; }
-  100% { transform: translateY(800%); opacity: 0; }
-}
-.scanline {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, #10b981, #34d399, transparent);
-  box-shadow: 0 0 12px #10b981;
-  animation: scanline 4s linear infinite;
-  pointer-events: none;
 }
 
 /* ─── Soundwave Bars ─── */

@@ -62,17 +62,10 @@ export default function CookieConsentBanner() {
                 <div className="min-w-0">
                   <h3 className="text-xs sm:text-sm font-bold text-navy-900 dark:text-white flex items-center gap-2 mb-0.5">
                     <ShieldCheck size={13} className="text-emerald-600 dark:text-emerald-400 flex-shrink-0" />
-                    رضایت کاربر درباره کوکی‌ها
+                    کوکی‌ها و حریم خصوصی
                   </h3>
-                  <p className="text-[10px] sm:text-[11px] text-navy-600 dark:text-navy-300 leading-relaxed line-clamp-2 sm:line-clamp-none">
-                    این پلتفرم برای بهبود تجربه کاربر از کوکی‌های ضروری استفاده می‌کند.
-                    {' '}
-                    <a
-                      href="#"
-                      className="text-emerald-700 dark:text-emerald-400 font-semibold hover:underline inline-flex items-center gap-0.5"
-                    >
-                      سیاست حفظ حریم خصوصی
-                    </a>
+                  <p className="text-[10px] sm:text-[11px] text-navy-600 dark:text-navy-300 leading-relaxed">
+                    این وب‌سایت برای به یاد سپردن تنظیمات شما (مانند حالت روشن یا تاریک) و نگهداری نشست ورود، از کوکی‌های ضروری استفاده می‌کند؛ این کوکی‌ها برای عملکرد درست سایت لازم هستند.
                   </p>
                 </div>
 

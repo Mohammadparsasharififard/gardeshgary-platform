@@ -347,11 +347,7 @@ export default function ContactSection() {
                   </button>
 
                   <p className="text-[10px] text-center text-navy-400 dark:text-navy-500 leading-relaxed">
-                    با ارسال این فرم، شما با{' '}
-                    <a href="#" className="text-emerald-700 dark:text-emerald-400 hover:underline">شرایط استفاده</a>
-                    {' و '}
-                    <a href="#" className="text-emerald-700 dark:text-emerald-400 hover:underline">سیاست حریم خصوصی</a>
-                    {' '}موافقت می‌کنید.
+                    با ارسال این فرم، درخواست شما نزد کارشناسان پلتفرم ثبت می‌شود و از طریق راه‌های انتخابی شما پاسخ داده خواهد شد.
                   </p>
                 </motion.form>
               )}

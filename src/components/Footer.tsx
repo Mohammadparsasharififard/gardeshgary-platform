@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Scale, Mail, Phone, MapPin, Send, Linkedin, Twitter, AlertCircle, Headset, BadgeCheck, Clock, ArrowUp, CheckCircle2, Loader2 } from 'lucide-react';
+import { Scale, Mail, Send, AlertCircle, Headset, BadgeCheck, Clock, ArrowUp, CheckCircle2, Loader2 } from 'lucide-react';
 import { BrandLogo } from '@/components/BrandLogo';
 import { useLocalStorage } from '@/hooks/useLocalStorage';
 import { useToast } from '@/components/Toast';
@@ -73,15 +73,11 @@ export default function Footer() {
     ],
     'سازمان': [
       { label: 'مشاوره و رزرو', href: '#/consultation' },
-      { label: 'دانشنامه حقوقی', href: '#/encyclopedia' },
       { label: 'اخبار و مقالات', href: '#/news' },
       { label: 'حقوق ورزشی', href: '#/sports-rights' },
     ],
     'حساب کاربری': [
       { label: 'پنل کاربری', href: '#/dashboard' },
-      { label: 'حریم خصوصی', href: '#' },
-      { label: 'شرایط استفاده', href: '#' },
-      { label: 'سیاست حفظ اطلاعات', href: '#' },
     ],
   };
 
@@ -174,22 +170,15 @@ export default function Footer() {
             <p className="text-xs text-navy-300 leading-relaxed mb-4">
               بستر تخصصی ارائه خدمات حقوقی هوشمند در حوزه گردشگری با بهره‌گیری از هوش مصنوعی و شبکه وکلای متخصص.
             </p>
-            {/* Social */}
+            {/* Social — only the real support channel; no placeholder profiles */}
             <div className="flex items-center gap-2">
-              {[
-                { Icon: Linkedin, label: 'لینکدین' },
-                { Icon: Twitter, label: 'توییتر' },
-                { Icon: Mail, label: 'ایمیل' },
-              ].map(({ Icon, label }) => (
-                <a
-                  key={label}
-                  href="#"
-                  aria-label={`پلتفرم در ${label}`}
-                  className="w-9 h-9 bg-navy-800 hover:bg-emerald-600 rounded-lg flex items-center justify-center transition-colors"
-                >
-                  <Icon size={16} className="text-white" />
-                </a>
-              ))}
+              <a
+                href="mailto:info@gardeshgary.ir"
+                aria-label="ایمیل پشتیبانی پلتفرم"
+                className="w-9 h-9 bg-navy-800 hover:bg-emerald-600 rounded-lg flex items-center justify-center transition-colors"
+              >
+                <Mail size={16} className="text-white" />
+              </a>
             </div>
           </div>
 

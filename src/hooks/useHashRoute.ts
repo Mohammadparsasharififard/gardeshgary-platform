@@ -6,7 +6,6 @@ import { useState, useEffect, useCallback } from 'react';
  *  ┌─ خانه (home)
  *  ├─ دانش و قوانین (knowledge)
  *  │   ├─ بانک قوانین (laws)
- *  │   ├─ دانشنامه (encyclopedia)
  *  │   ├─ اخبار و مقالات (news)
  *  │   └─ حقوق گردشگری ورزشی (sports-rights)
  *  ├─ خدمات (services)
@@ -28,7 +27,6 @@ import { useState, useEffect, useCallback } from 'react';
 export type Route =
   | 'home'
   | 'laws'
-  | 'encyclopedia'
   | 'news'
   | 'sports-rights'
   | 'ai-assistant'
@@ -49,7 +47,6 @@ export const NAV_GROUPS: NavGroup[] = [
     label: 'دانش و قوانین',
     items: [
       { id: 'laws', label: 'بانک قوانین', hash: '#/laws', icon: 'Scale' },
-      { id: 'encyclopedia', label: 'دانشنامه', hash: '#/encyclopedia', icon: 'BookOpen' },
       { id: 'news', label: 'اخبار و مقالات', hash: '#/news', icon: 'Newspaper' },
       { id: 'sports-rights', label: 'حقوق ورزشی', hash: '#/sports-rights', icon: 'Activity' },
     ],
@@ -81,6 +78,8 @@ export const ROUTES: { id: Route; label: string; hash: string; icon: string }[] 
 function readHash(): Route {
   if (typeof window === 'undefined') return 'home';
   const h = window.location.hash.replace(/^#\/?/, '').replace(/\/.*$/, '');
+  // Legacy 'encyclopedia' route was merged into 'laws' — old links keep working.
+  if (h === 'encyclopedia') return 'laws';
   const match = ROUTES.find((r) => r.id === h);
   return match ? match.id : 'home';
 }
@@ -93,7 +92,30 @@ export function useHashRoute(): {
   const [route, setRoute] = useState<Route>(readHash);
 
   useEffect(() => {
+    // The browser's history scroll restoration fights the route-change
+    // scrollTo (returning home kept the old scroll position) — take manual
+    // control so every hash-route change lands at the top of the page.
+    if ('scrollRestoration' in window.history) {
+      window.history.scrollRestoration = 'manual';
+    }
+
+    // Legacy '#/encyclopedia' deep links are merged into '#/laws' — rewrite
+    // the URL visibly (init + hashchange) instead of silently aliasing it.
+    const rewriteLegacyHash = () => {
+      const h = window.location.hash.replace(/^#\/?/, '').replace(/\/.*$/, '');
+      if (h === 'encyclopedia') {
+        window.location.hash = '#/laws';
+        return true;
+      }
+      return false;
+    };
+
+    // Init pass: normalize a legacy hash present at load time.
+    rewriteLegacyHash();
+
     const onHashChange = () => {
+      // Rewriting the hash fires another hashchange — let it do the work.
+      if (rewriteLegacyHash()) return;
       setRoute(readHash());
       window.scrollTo({ top: 0, behavior: 'instant' as ScrollBehavior });
     };
